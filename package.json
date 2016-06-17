@@ -1,0 +1,38 @@
+{
+  "name": "test-all-versions",
+  "version": "0.0.0",
+  "description": "Run your test suite against all published versions of a dependency",
+  "bin": "index.js",
+  "dependencies": {
+    "semver": "^5.1.0",
+    "npm-package-versions": "^1.0.0",
+    "spawn-npm-install": "^1.2.0"
+  },
+  "devDependencies": {
+    "standard": "^7.1.2",
+    "tape": "^4.5.1"
+  },
+  "scripts": {
+    "test": "standard && tape test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/watson/test-all-versions.git"
+  },
+  "keywords": [
+    "test",
+    "npm",
+    "version",
+    "versions",
+    "module",
+    "modules",
+    "package",
+    "packages"
+  ],
+  "author": "Thomas Watson Steen <w@tson.dk> (https://twitter.com/wa7son)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/watson/test-all-versions/issues"
+  },
+  "homepage": "https://github.com/watson/test-all-versions#readme"
+}
