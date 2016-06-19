@@ -1,6 +1,6 @@
 {
   "name": "test-all-versions",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Run your test suite against all published versions of a dependency",
   "bin": {
     "tav": "index.js"
@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/watson/test-all-versions#readme",
   "coordinates": [
-    37.4122228,
-    -122.0950889
+    37.4121842,
+    -122.0950644
   ]
 }
