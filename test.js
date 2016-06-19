@@ -50,9 +50,10 @@ test('yaml', function (t) {
   })
 
   cp.stdout.on('data', function (chunk) {
-    var s = chunk.toString()
-    if (s.indexOf('-- ') === 0) return // ignore output from tav it self
-    t.equal(s.trim(), expected.shift())
+    chunk.toString().trim().split('\n').forEach(function (line) {
+      if (line.indexOf('-- ') === 0) return // ignore output from tav it self
+      t.equal(line, expected.shift())
+    })
   })
 
   cp.stdout.pipe(process.stdout)
