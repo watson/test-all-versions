@@ -1,0 +1,8 @@
+roundround:
+  versions: <=0.2.0
+  commands: echo roundround-a
+patterns:
+  versions: <=1.0.2
+  commands:
+    - echo patterns-a
+    - echo patterns-b

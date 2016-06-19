@@ -6,9 +6,10 @@
     "tav": "index.js"
   },
   "dependencies": {
-    "semver": "^5.1.0",
     "npm-package-versions": "^1.0.0",
-    "spawn-npm-install": "^1.2.0"
+    "semver": "^5.1.0",
+    "spawn-npm-install": "^1.2.0",
+    "yaml": "^0.3.0"
   },
   "devDependencies": {
     "standard": "^7.1.2",
