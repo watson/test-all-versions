@@ -26,7 +26,7 @@ test('tests fail', function (t) {
 test('invalid module', function (t) {
   var cp = exec('./index.js test-all-versions-' + Date.now() + ' ^1.0.0 npm test')
   cp.on('close', function (code) {
-    t.equal(code, process.version.indexOf('v0.10.') === 0 ? 8 : 1)
+    t.equal(code, 1)
     t.end()
   })
   cp.stdout.pipe(process.stdout)
