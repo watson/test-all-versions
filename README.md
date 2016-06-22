@@ -11,7 +11,7 @@ dependency.
 Use the `tav` command to run the tests:
 
 ```
-$ tav [<module> <semver> <command> [args...]]
+$ tav [options] [<module> <semver> <command> [args...]]
 ```
 
 Example running `node test.js` against all versions of the mysql module
@@ -21,9 +21,16 @@ that satisfies the `^2.0.0` semver:
 tav mysql ^2.0.0 node test.js
 ```
 
+### options
+
+- `--ci` - When running `tav` together with a `.tav.yml` file, use this
+  argument to only run the tests on a CI server. This allows you to add
+  `tav` to your `npm test` command without spending time running tav
+  tests in development.
+
 ### .tav.yml
 
-If `tav` is run without any arguments, it will instead look for a
+If `tav` is run without specifying a module, it will instead look for a
 `.tav.yml` file in `cwd` and expect that to contain all its
 configuration. This is similar to how Travis CI works with
 `.travis.yml`.

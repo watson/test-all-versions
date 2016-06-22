@@ -3,6 +3,7 @@
 
 var exec = require('child_process').exec
 var fs = require('fs')
+var isCI = require('is-ci')
 var yaml = require('yaml')
 var pkgVersions = require('npm-package-versions')
 var semver = require('semver')
@@ -12,7 +13,7 @@ process.env.PATH = 'node_modules' + require('path').sep + '.bin:' + process.env.
 
 var tests = []
 
-if (process.argv.length < 3) {
+if (process.argv.length < 4) {
   loadYaml()
 } else {
   var args = process.argv.slice(2)
@@ -36,6 +37,7 @@ function loadYaml () {
 }
 
 function runTests (err) {
+  if (process.argv[2] === '--ci' && !isCI) return
   if (err || tests.length === 0) return done(err)
   var args = tests.pop()
   args.push(runTests)
