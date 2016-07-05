@@ -42,7 +42,7 @@ all versions of the `pg` module that satisfies `*`:
 ```yml
 mysql:
   versions: ^2.0.0
-  commands: node test/mysql/*.js
+  commands: tape test/mysql/*.js
 pg:
   versions: "*"
   commands:
