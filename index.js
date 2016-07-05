@@ -12,6 +12,7 @@ var install = require('spawn-npm-install')
 process.env.PATH = 'node_modules' + require('path').sep + '.bin:' + process.env.PATH
 
 var tests = []
+var currentlyInstalled // a string containing the latest installed module (format: name@version)
 
 if (process.argv.length < 4) {
   loadYaml()
@@ -82,9 +83,15 @@ function testVersion (name, version, cmds, cb) {
 function testCmd (name, version, cmd, cb) {
   name = name + '@' + version
 
-  console.log('-- installing %s', name)
+  if (name !== currentlyInstalled) {
+    console.log('-- installing %s', name)
+    currentlyInstalled = name
+    install(name, test)
+  } else {
+    test()
+  }
 
-  install(name, function (err) {
+  function test (err) {
     if (err) return cb(err)
 
     console.log('-- running "%s" with %s', cmd, name)
@@ -93,7 +100,7 @@ function testCmd (name, version, cmd, cb) {
     cp.on('close', cb)
     cp.stdout.pipe(process.stdout)
     cp.stderr.pipe(process.stderr)
-  })
+  }
 }
 
 function done (err) {
