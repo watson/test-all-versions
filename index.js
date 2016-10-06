@@ -109,6 +109,11 @@ function testCmd (name, version, cmd, cb) {
 
     var cp = exec(cmd)
     cp.on('close', cb)
+    cp.on('error', function (err) {
+      console.error('-- error running "%s" with %s', cmd, name)
+      console.error(err.stack)
+      cb(err.code || 1)
+    })
     cp.stdout.pipe(process.stdout)
     cp.stderr.pipe(process.stderr)
   }
