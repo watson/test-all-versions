@@ -83,12 +83,22 @@ function testVersion (name, version, cmds, cb) {
 function testCmd (name, version, cmd, cb) {
   name = name + '@' + version
 
-  if (name !== currentlyInstalled) {
+  if (name !== currentlyInstalled) attemptInstall()
+  else test()
+
+  function attemptInstall (attempts) {
+    if (!attempts) attempts = 1
     console.log('-- installing %s', name)
     currentlyInstalled = name
-    install(name, test)
-  } else {
-    test()
+    install(name, test).on('error', function (err) {
+      if (attempts <= 10) {
+        console.warn('-- error installing %s (%s) - retrying (%d/10)...', name, err.message, ++attempts)
+        attemptInstall(attempts)
+      } else {
+        console.error('-- error installing %s (%s) - aborting!', name, err.message)
+        cb(err)
+      }
+    })
   }
 
   function test (err) {
