@@ -95,8 +95,9 @@ function testCmd (name, version, cmd, cb) {
         console.warn('-- error installing %s (%s) - retrying (%d/10)...', name, err.message, ++attempts)
         attemptInstall(attempts)
       } else {
-        console.error('-- error installing %s (%s) - aborting!', name, err.message)
-        cb(err)
+        console.error('-- error installing %s - aborting!', name)
+        console.error(err.stack)
+        cb(err.code || 1)
       }
     })
   }
