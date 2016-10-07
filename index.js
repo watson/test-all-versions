@@ -91,8 +91,8 @@ function testCmd (name, version, cmd, cb) {
     console.log('-- installing %s', name)
     currentlyInstalled = name
     install(name, test).on('error', function (err) {
-      if (attempts <= 10) {
-        console.warn('-- error installing %s (%s) - retrying (%d/10)...', name, err.message, ++attempts)
+      if (++attempts <= 10) {
+        console.warn('-- error installing %s (%s) - retrying (%d/10)...', name, err.message, attempts)
         attemptInstall(attempts)
       } else {
         console.error('-- error installing %s - aborting!', name)
