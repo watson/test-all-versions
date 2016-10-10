@@ -5,6 +5,7 @@ var exec = require('child_process').exec
 var fs = require('fs')
 var isCI = require('is-ci')
 var yaml = require('yaml')
+var once = require('once')
 var pkgVersions = require('npm-package-versions')
 var semver = require('semver')
 var install = require('spawn-npm-install')
@@ -90,7 +91,10 @@ function testCmd (name, version, cmd, cb) {
     if (!attempts) attempts = 1
     console.log('-- installing %s', name)
     currentlyInstalled = name
-    install(name, test).on('error', function (err) {
+
+    var doneInstalling = once(function (err) {
+      if (!err) return test()
+
       if (++attempts <= 10) {
         console.warn('-- error installing %s (%s) - retrying (%d/10)...', name, err.message, attempts)
         attemptInstall(attempts)
@@ -100,11 +104,11 @@ function testCmd (name, version, cmd, cb) {
         cb(err.code || 1)
       }
     })
+
+    install(name, doneInstalling).on('error', doneInstalling)
   }
 
-  function test (err) {
-    if (err) return cb(err)
-
+  function test () {
     console.log('-- running "%s" with %s', cmd, name)
 
     var cp = exec(cmd)
