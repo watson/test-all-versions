@@ -4,7 +4,7 @@ var exec = require('child_process').exec
 var test = require('tape')
 
 test('tests succeed', function (t) {
-  var cp = exec('./index.js roundround "<=0.2.0" node -e "process.exit\\(0\\)"')
+  var cp = exec('./index.js roundround "<=0.2.0" -- node -e "process.exit\\(0\\)"')
   cp.on('close', function (code) {
     t.equal(code, 0)
     t.end()
@@ -14,7 +14,7 @@ test('tests succeed', function (t) {
 })
 
 test('tests fail', function (t) {
-  var cp = exec('./index.js roundround "<=0.2.0" node -e "process.exit\\(1\\)"')
+  var cp = exec('./index.js roundround "<=0.2.0" -- node -e "process.exit\\(1\\)"')
   cp.on('close', function (code) {
     t.equal(code, 1)
     t.end()

@@ -9,29 +9,30 @@ var once = require('once')
 var pkgVersions = require('npm-package-versions')
 var semver = require('semver')
 var install = require('spawn-npm-install')
+var argv = require('minimist')(process.argv.slice(2))
 
 process.env.PATH = 'node_modules' + require('path').sep + '.bin:' + process.env.PATH
 
 var tests = []
 var currentlyInstalled // a string containing the latest installed module (format: name@version)
 
-if (process.argv[2] === '--help') {
+if (argv.help) {
   console.log('Usage: tav [options] [<module> <semver> <command> [args...]]')
   console.log()
   console.log('Options:')
-  console.log('  --help  show this help')
-  console.log('  --ci    only run on CI servers when using .tav.yml file')
+  console.log('  --help       show this help')
+  console.log('  -q, --quiet  don\'t output stdout from tests unless an error occors')
+  console.log('  --ci         only run on CI servers when using .tav.yml file')
   process.exit()
 }
 
-if (process.argv.length < 4) {
+if (argv._.length === 0) {
   loadYaml()
 } else {
-  var args = process.argv.slice(2)
   tests.push([
-    args.shift(),    // module name
-    args.shift(),    // module semver
-    [args.join(' ')] // test command
+    argv._.shift(),    // module name
+    argv._.shift(),    // module semver
+    [argv._.join(' ')] // test command
   ])
 }
 
@@ -48,7 +49,7 @@ function loadYaml () {
 }
 
 function runTests (err) {
-  if (process.argv[2] === '--ci' && !isCI) return
+  if (argv.ci && !isCI) return
   if (err || tests.length === 0) return done(err)
   var args = tests.pop()
   args.push(runTests)
@@ -121,13 +122,27 @@ function testCmd (name, version, cmd, cb) {
     console.log('-- running "%s" with %s', cmd, name)
 
     var cp = exec(cmd)
-    cp.on('close', cb)
+    cp.on('close', function (code) {
+      if (code !== 0 && stdout) {
+        console.log('-- detected failing test, flushing stdout...')
+        console.log(stdout)
+      }
+      cb(code)
+    })
     cp.on('error', function (err) {
       console.error('-- error running "%s" with %s', cmd, name)
       console.error(err.stack)
       cb(err.code || 1)
     })
-    cp.stdout.pipe(process.stdout)
+    if (!argv.quiet && !argv.q) {
+      cp.stdout.pipe(process.stdout)
+    } else {
+      // store output in case we needed if an error occurs
+      var stdout = ''
+      cp.stdout.on('data', function (chunk) {
+        stdout += chunk
+      })
+    }
     cp.stderr.pipe(process.stderr)
   }
 }
