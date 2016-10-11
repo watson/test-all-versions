@@ -23,6 +23,7 @@ tav mysql ^2.0.0 node test.js
 
 ### options
 
+- `--help` - Output usage info
 - `--ci` - When running `tav` together with a `.tav.yml` file, use this
   argument to only run the tests on a CI server. This allows you to add
   `tav` to your `npm test` command without spending time running tav
