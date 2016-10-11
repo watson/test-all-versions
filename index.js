@@ -16,11 +16,11 @@ process.env.PATH = 'node_modules' + require('path').sep + '.bin:' + process.env.
 var tests = []
 var currentlyInstalled // a string containing the latest installed module (format: name@version)
 
-if (argv.help) {
+if (argv.help || argv.h) {
   console.log('Usage: tav [options] [<module> <semver> <command> [args...]]')
   console.log()
   console.log('Options:')
-  console.log('  --help       show this help')
+  console.log('  -h, --help   show this help')
   console.log('  -q, --quiet  don\'t output stdout from tests unless an error occors')
   console.log('  --ci         only run on CI servers when using .tav.yml file')
   process.exit()
