@@ -1,6 +1,7 @@
 'use strict'
 
 var exec = require('child_process').exec
+var semver = require('semver')
 var test = require('tape')
 
 test('tests succeed', function (t) {
@@ -34,7 +35,10 @@ test('invalid module', function (t) {
 })
 
 test('yaml', function (t) {
-  t.plan(7)
+  var range = '4.x || 6.x'
+  var versionTest = semver.satisfies(process.version, range)
+
+  t.plan(versionTest ? 8 : 7)
 
   var expected = [
     'patterns-a', 'patterns-b', // patterns@1.0.2
@@ -43,6 +47,12 @@ test('yaml', function (t) {
     'roundround-a'              // roundround@0.1.0
   ]
 
+  if (versionTest) {
+    expected.unshift(function (line) {
+      return semver.satisfies(line, range)
+    })
+  }
+
   var cp = exec('./index.js')
 
   cp.on('close', function (code) {
@@ -50,9 +60,14 @@ test('yaml', function (t) {
   })
 
   cp.stdout.on('data', function (chunk) {
-    chunk.toString().trim().split('\n').forEach(function (line) {
-      if (line.indexOf('-- ') === 0) return // ignore output from tav it self
-      t.equal(line, expected.shift())
+    var lines = chunk.toString().trim().split('\n').filter(function (line) {
+      return line.indexOf('-- ') !== 0 // ignore output from tav it self
+    })
+
+    lines.forEach(function (line) {
+      var result = expected.shift()
+      if (typeof result === 'function') t.ok(result(line))
+      else t.equal(line, result)
     })
   })
 

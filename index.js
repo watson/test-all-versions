@@ -43,6 +43,7 @@ function loadYaml () {
 
   Object.keys(conf).map(function (name) {
     var m = conf[name]
+    if (m.node && !semver.satisfies(process.version, m.node)) return
     var cmds = Array.isArray(m.commands) ? m.commands : [m.commands]
     tests.push([name, m.versions, cmds])
   })
