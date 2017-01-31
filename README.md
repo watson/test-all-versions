@@ -60,7 +60,7 @@ value must be a valid semver range:
 
 ```yml
 mysql:
-  node: >=1.0.0
+  node: ">=1.0.0"
   versions: ^2.0.0
   commands: node test/mysql.js
 ```
