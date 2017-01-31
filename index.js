@@ -52,7 +52,9 @@ function loadYaml () {
       name: name,
       semver: m.versions,
       cmds: cmds,
-      peerDependencies: peerDependencies
+      peerDependencies: peerDependencies,
+      pretest: m.pretest,
+      posttest: m.posttest
     })
   })
 }
@@ -80,7 +82,7 @@ function test (opts, cb) {
 
       function run (err) {
         if (err || versions.length === 0) return cb(err)
-        testVersion(opts.name, versions.pop(), opts.cmds, run)
+        testVersion(opts, versions.pop(), run)
       }
     })
   })
@@ -93,56 +95,71 @@ function test (opts, cb) {
   })
 }
 
-function testVersion (name, version, cmds, cb) {
+function testVersion (test, version, cb) {
   var i = 0
 
   run()
 
   function run (err) {
-    if (err || i === cmds.length) return cb(err)
-    testCmd(name, version, cmds[i++], function (code) {
-      if (code !== 0) {
-        var err = new Error('Test exited with code ' + code)
-        err.exitCode = code
-        cb(err)
-      }
-      run()
+    if (err || i === test.cmds.length) return cb(err)
+    pretest(function (err) {
+      if (err) return cb(err)
+      testCmd(test.name, version, test.cmds[i++], function (code) {
+        if (code !== 0) {
+          var err = new Error('Test exited with code ' + code)
+          err.exitCode = code
+          cb(err)
+        }
+        posttest(run)
+      })
     })
+  }
+
+  function pretest (cb) {
+    if (!test.pretest) return process.nextTick(cb)
+    console.log('-- running pretest "%s" for %s', test.pretest, test.name)
+    execute(test.pretest, test.name, cb)
+  }
+
+  function posttest (cb) {
+    if (!test.posttest) return process.nextTick(cb)
+    console.log('-- running posttest "%s" for %s', test.posttest, test.name)
+    execute(test.posttest, test.name, cb)
   }
 }
 
 function testCmd (name, version, cmd, cb) {
   ensurePackage(name, version, 'target', function (err) {
     if (err) return cb(err)
-
-    name = name + '@' + version
-
-    console.log('-- running "%s" with %s', cmd, name)
-
-    var cp = exec(cmd)
-    cp.on('close', function (code) {
-      if (code !== 0 && stdout) {
-        console.log('-- detected failing test, flushing stdout...')
-        console.log(stdout)
-      }
-      cb(code)
-    })
-    cp.on('error', function (err) {
-      console.error('-- error running "%s" with %s', cmd, name)
-      console.error(err.stack)
-      cb(err.code || 1)
-    })
-    if (!argv.quiet && !argv.q) {
-      cp.stdout.pipe(process.stdout)
-    } else {
-      // store output in case we needed if an error occurs
-      var stdout = ''
-      cp.stdout.on('data', function (chunk) {
-        stdout += chunk
-      })
-    }
-    cp.stderr.pipe(process.stderr)
+    console.log('-- running test "%s" with %s', cmd, name)
+    execute(cmd, name + '@' + version, cb)
   })
+}
+
+function execute (cmd, name, cb) {
+  var cp = exec(cmd)
+  cp.on('close', function (code) {
+    if (code !== 0 && stdout) {
+      console.log('-- detected failing command, flushing stdout...')
+      console.log(stdout)
+    }
+    cb(code)
+  })
+  cp.on('error', function (err) {
+    console.error('-- error running "%s" with %s', cmd, name)
+    console.error(err.stack)
+    cb(err.code || 1)
+  })
+  if (!argv.quiet && !argv.q) {
+    cp.stdout.pipe(process.stdout)
+  } else {
+    // store output in case we needed if an error occurs
+    var stdout = ''
+    cp.stdout.on('data', function (chunk) {
+      stdout += chunk
+    })
+  }
+  cp.stderr.pipe(process.stderr)
 }
 
 function ensurePackage (name, version, type, cb) {

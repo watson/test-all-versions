@@ -10,6 +10,13 @@ patterns:
   peerDependencies: nearest-date@1.0.0
   versions: 1.0.1
   commands: node -e "console.log(require('./node_modules/nearest-date/package.json').version)"
+b2f:
+  versions: 1.0.0
+  pretest: echo pretest
+  commands:
+    - echo b2f-a
+    - echo b2f-b
+  posttest: echo posttest
 is-it-weekend:
   node: 4.x || 6.x
   versions: 1.0.0

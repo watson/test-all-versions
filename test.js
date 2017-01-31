@@ -38,9 +38,10 @@ test('yaml', function (t) {
   var range = '4.x || 6.x'
   var versionTest = semver.satisfies(process.version, range)
 
-  t.plan(versionTest ? 9 : 8)
+  t.plan(versionTest ? 15 : 14)
 
   var expected = [
+    'pretest', 'b2f-a', 'posttest', 'pretest', 'b2f-b', 'posttest', // b2f@1.0.0
     '1.0.0',                    // 27mhz@1.0.1 peerDependency
     'patterns-a', 'patterns-b', // patterns@1.0.2
     'patterns-a', 'patterns-b', // patterns@0.0.1

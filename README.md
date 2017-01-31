@@ -79,6 +79,18 @@ graphql-express:
   commands: node test/graphql-express.js
 ```
 
+#### Setup and Teardown
+
+If you need to run a script before or after a command, use the `pretest`
+and `posttest` keys:
+
+```yml
+graphql:
+  versions: ^0.7.0
+  pretest: rm -fr node_modules/graphql-express
+  commands: node test/graphql.js
+```
+
 ## License
 
 MIT
