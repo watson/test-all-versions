@@ -29,12 +29,11 @@ if (argv.help || argv.h) {
 if (argv._.length === 0) {
   loadYaml()
 } else {
-  tests.push([
-    argv._.shift(),     // module name
-    argv._.shift(),     // module semver
-    [argv._.join(' ')], // test command
-    []                  // peerDependencies not supported from command line
-  ])
+  tests.push({
+    name: argv._.shift(),    // module name
+    semver: argv._.shift(),  // module semver
+    cmds: [argv._.join(' ')] // test command
+  })
 }
 
 runTests()
@@ -46,37 +45,42 @@ function loadYaml () {
     var m = conf[name]
     if (m.node && !semver.satisfies(process.version, m.node)) return
     var cmds = Array.isArray(m.commands) ? m.commands : [m.commands]
-    var peerDependencies = m.peerDependencies
-      ? Array.isArray(m.peerDependencies) ? m.peerDependencies : [m.peerDependencies]
-      : []
-    tests.push([name, m.versions, cmds, peerDependencies])
+    if (m.peerDependencies) {
+      var peerDependencies = Array.isArray(m.peerDependencies) ? m.peerDependencies : [m.peerDependencies]
+    }
+    tests.push({
+      name: name,
+      semver: m.versions,
+      cmds: cmds,
+      peerDependencies: peerDependencies
+    })
   })
 }
 
 function runTests (err) {
   if (argv.ci && !isCI) return
   if (err || tests.length === 0) return done(err)
-  var args = tests.pop()
-  args.push(runTests)
-  test.apply(null, args)
+  test(tests.pop(), runTests)
 }
 
-function test (name, moduleSemver, cmds, peerDependencies, cb) {
+function test (opts, cb) {
+  var peerDependencies = opts.peerDependencies || []
+
   var next = afterAll(function (err) {
     if (err) return cb(err)
 
-    pkgVersions(name, function (err, versions) {
+    pkgVersions(opts.name, function (err, versions) {
       if (err) return cb(err)
 
       versions = versions.filter(function (version) {
-        return semver.satisfies(version, moduleSemver)
+        return semver.satisfies(version, opts.semver)
       })
 
       run()
 
       function run (err) {
         if (err || versions.length === 0) return cb(err)
-        testVersion(name, versions.pop(), cmds, run)
+        testVersion(opts.name, versions.pop(), opts.cmds, run)
       }
     })
   })
