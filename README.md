@@ -46,16 +46,24 @@ mysql:
   versions: ^2.0.0
   commands: tape test/mysql/*.js
 pg:
-  node: >=1.0.0
   versions: "*"
   commands:
     - node test/pg1.js
     - node test/pg2.js
 ```
 
-The `node` node is optional and can be specified in case you want to
-limit which verisons of Node.js the tests for a specific package runs
-under. The value must be a valid semver range.
+#### Node.js version
+
+You can optionally specify a `node` key in case you want to limit which
+verisons of Node.js the tests for a specific package runs under. The
+value must be a valid semver range:
+
+```yml
+mysql:
+  node: >=1.0.0
+  versions: ^2.0.0
+  commands: node test/mysql.js
+```
 
 ## License
 
