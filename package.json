@@ -6,6 +6,7 @@
     "tav": "index.js"
   },
   "dependencies": {
+    "after-all": "^2.0.2",
     "is-ci": "^1.0.10",
     "js-yaml": "^3.7.0",
     "minimist": "^1.2.0",
@@ -19,6 +20,7 @@
     "tape": "^4.6.3"
   },
   "scripts": {
+    "pretest": "npm prune",
     "test": "standard && tape test.js"
   },
   "repository": {

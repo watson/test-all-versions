@@ -65,6 +65,20 @@ mysql:
   commands: node test/mysql.js
 ```
 
+#### Peer Dependencies
+
+If a package or a test needs certain peer dependencies installed in
+order to be able to run, use the `peerDependencies` key. The value can
+be either a single value like shown below, or a list of values just like
+with the `commands` key:
+
+```yml
+graphql-express:
+  peerDependencies: graphql@0.9.2
+  versions: ^0.6.1
+  commands: node test/graphql-express.js
+```
+
 ## License
 
 MIT

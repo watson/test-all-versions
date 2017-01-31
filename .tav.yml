@@ -6,6 +6,10 @@ patterns:
   commands:
     - echo patterns-a
     - echo patterns-b
+27mhz:
+  peerDependencies: nearest-date@1.0.0
+  versions: 1.0.1
+  commands: node -e "console.log(require('./node_modules/nearest-date/package.json').version)"
 is-it-weekend:
   node: 4.x || 6.x
   versions: 1.0.0
