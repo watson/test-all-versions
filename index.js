@@ -4,7 +4,7 @@
 var exec = require('child_process').exec
 var fs = require('fs')
 var isCI = require('is-ci')
-var yaml = require('yaml')
+var yaml = require('js-yaml')
 var once = require('once')
 var pkgVersions = require('npm-package-versions')
 var semver = require('semver')
@@ -39,7 +39,7 @@ if (argv._.length === 0) {
 runTests()
 
 function loadYaml () {
-  var conf = yaml.eval(fs.readFileSync('.tav.yml').toString())
+  var conf = yaml.safeLoad(fs.readFileSync('.tav.yml').toString())
 
   Object.keys(conf).map(function (name) {
     var m = conf[name]
