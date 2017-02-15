@@ -91,6 +91,25 @@ graphql:
   commands: node test/graphql.js
 ```
 
+#### Whitelist tests with environment variables
+
+You can use the enironment variable `TAV` to limit which module from the
+.`tav.yml` file to test:
+
+`TAV=mysql`
+
+This allows you to create a build-matrix on servers like Travis CI where
+each module in your `.tav.yml` file is tests in an individual build. You
+can also comma separate multiple names if needed:
+
+`TAV=mysql,pg`
+
+To see an example of this in action, check out the
+[`.travis.yml`](https://github.com/opbeat/opbeat-node/blob/master/.travis.yml)
+and
+[`.tav.yml`](https://github.com/opbeat/opbeat-node/blob/master/.tav.yml)
+files under the [opbeat module](https://github.com/opbeat/opbeat-node).
+
 ## License
 
 MIT

@@ -40,23 +40,29 @@ runTests()
 
 function loadYaml () {
   var conf = yaml.safeLoad(fs.readFileSync('.tav.yml').toString())
+  var whitelist = process.env.TAV ? process.env.TAV.split(',') : null
 
-  Object.keys(conf).map(function (name) {
-    var m = conf[name]
-    if (m.node && !semver.satisfies(process.version, m.node)) return
-    var cmds = Array.isArray(m.commands) ? m.commands : [m.commands]
-    if (m.peerDependencies) {
-      var peerDependencies = Array.isArray(m.peerDependencies) ? m.peerDependencies : [m.peerDependencies]
-    }
-    tests.push({
-      name: name,
-      semver: m.versions,
-      cmds: cmds,
-      peerDependencies: peerDependencies,
-      pretest: m.pretest,
-      posttest: m.posttest
+  Object.keys(conf)
+    .filter(function (name) {
+      // Only run selected test if TAV environment variable is used
+      return whitelist ? whitelist.indexOf(name) !== -1 : true
     })
-  })
+    .map(function (name) {
+      var m = conf[name]
+      if (m.node && !semver.satisfies(process.version, m.node)) return
+      var cmds = Array.isArray(m.commands) ? m.commands : [m.commands]
+      if (m.peerDependencies) {
+        var peerDependencies = Array.isArray(m.peerDependencies) ? m.peerDependencies : [m.peerDependencies]
+      }
+      tests.push({
+        name: name,
+        semver: m.versions,
+        cmds: cmds,
+        peerDependencies: peerDependencies,
+        pretest: m.pretest,
+        posttest: m.posttest
+      })
+    })
 }
 
 function runTests (err) {
