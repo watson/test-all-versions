@@ -9,6 +9,7 @@ var once = require('once')
 var pkgVersions = require('npm-package-versions')
 var semver = require('semver')
 var afterAll = require('after-all')
+var resolve = require('resolve')
 var fresh = require('fresh-require')
 var install = require('spawn-npm-install')
 var argv = require('minimist')(process.argv.slice(2))
@@ -170,19 +171,19 @@ function execute (cmd, name, cb) {
 }
 
 function ensurePackage (name, version, type, cb) {
-  try {
-    var installedVersion = fresh(name + '/package.json', require).version
-  } catch (e) {}
-
   var installName = name + '@' + version
 
-  if (installedVersion === version) {
-    console.log('-- reusing already installed %s %s', type, installName)
-    process.nextTick(cb)
-    return
-  }
+  resolve(name + '/package.json', {basedir: process.cwd()}, function (err, pkg) {
+    var installedVersion = err ? null : fresh(pkg, require).version
 
-  attemptInstall()
+    if (installedVersion && semver.satisfies(installedVersion, version)) {
+      console.log('-- reusing already installed %s %s', type, installName)
+      cb()
+      return
+    }
+
+    attemptInstall()
+  })
 
   function attemptInstall (attempts) {
     if (!attempts) attempts = 1

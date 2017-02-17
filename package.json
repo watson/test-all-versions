@@ -13,6 +13,7 @@
     "minimist": "^1.2.0",
     "npm-package-versions": "^1.0.0",
     "once": "^1.4.0",
+    "resolve": "^1.2.0",
     "semver": "^5.1.0",
     "spawn-npm-install": "^1.2.0"
   },
