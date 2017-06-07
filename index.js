@@ -202,7 +202,7 @@ function ensurePackage (name, version, type, cb) {
       }
     })
 
-    install(installName, done).on('error', done)
+    install(installName, {noSave: true}, done).on('error', done)
   }
 }
 
