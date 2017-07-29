@@ -2,6 +2,7 @@
 'use strict'
 
 var exec = require('child_process').exec
+var execSync = require('child_process').execSync
 var fs = require('fs')
 var isCI = require('is-ci')
 var yaml = require('js-yaml')
@@ -13,6 +14,10 @@ var resolve = require('resolve')
 var fresh = require('fresh-require')
 var install = require('spawn-npm-install')
 var argv = require('minimist')(process.argv.slice(2))
+
+// execSync was added in Node.js v0.11.12, so if it doesn't exist, we'll just
+// assume that npm5 isn't used either
+var npm5plus = execSync && semver.gte(execSync('npm -v', {encoding: 'utf-8'}).trim(), '5.0.0')
 
 process.env.PATH = 'node_modules' + require('path').sep + '.bin:' + process.env.PATH
 
@@ -177,6 +182,14 @@ function execute (cmd, name, cb) {
 }
 
 function ensurePackages (packages, cb) {
+  if (npm5plus) {
+    // npm5 will uninstall everything that's not in the local package.json and
+    // not in the install string. This might make tests fail. So if we detect
+    // npm5, we just force install everything all the time.
+    attemptInstall(packages.join(' '), cb)
+    return
+  }
+
   var next = afterAll(function (_, packages) {
     packages = packages.filter(function (pkg) { return !!pkg })
     if (packages.length > 0) attemptInstall(packages.join(' '), cb)
