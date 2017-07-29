@@ -76,3 +76,20 @@ test('yaml', function (t) {
   cp.stdout.pipe(process.stdout)
   cp.stderr.pipe(process.stderr)
 })
+
+test('missing versions', function (t) {
+  process.chdir('./test/missing-versions')
+  var found = false
+  var cp = exec('../../index.js')
+  cp.stderr.on('data', function (chunk) {
+    if (!found && /Error: Missing "versions" property for 27mhz/.test(chunk)) {
+      found = true
+    }
+  })
+  cp.on('close', function (code) {
+    t.equal(code, semver.satisfies(process.version, '0.10.x') ? 8 : 1)
+    t.ok(found)
+    process.chdir('../..')
+    t.end()
+  })
+})

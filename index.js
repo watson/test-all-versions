@@ -56,6 +56,9 @@ function loadYaml () {
       if (m.peerDependencies) {
         var peerDependencies = Array.isArray(m.peerDependencies) ? m.peerDependencies : [m.peerDependencies]
       }
+
+      if (!m.versions) throw new Error('Missing "versions" property for ' + name)
+
       tests.push({
         name: name,
         semver: m.versions,
