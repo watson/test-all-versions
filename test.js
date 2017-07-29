@@ -35,11 +35,7 @@ test('invalid module', function (t) {
 })
 
 test('yaml', function (t) {
-  // custom `is-it-weekend` test - start
-  var range = '4.x || 6.x'
-  var versionTest = semver.satisfies(process.version, range)
-
-  t.plan(versionTest ? 15 : 14)
+  t.plan(14)
 
   var expected = [
     'pretest', 'b2f-a', 'posttest', 'pretest', 'b2f-b', 'posttest', // b2f@1.0.0
@@ -50,39 +46,45 @@ test('yaml', function (t) {
     'roundround-a'              // roundround@0.1.0
   ]
 
-  if (versionTest) {
-    expected.unshift(function (line) {
-      return semver.satisfies(line, range)
-    })
-  }
-  // custom `is-it-weekend` test - end
-
-  var cp = exec('./index.js')
+  var cp = start()
 
   cp.on('close', function (code) {
     t.equal(code, 0)
   })
 
   cp.stdout.on('data', function (chunk) {
-    var lines = chunk.toString().trim().split('\n').filter(function (line) {
-      return line.indexOf('-- ') !== 0 // ignore output from tav it self
-    })
-
-    lines.forEach(function (line) {
-      var result = expected.shift()
-      if (typeof result === 'function') t.ok(result(line))
-      else t.equal(line, result)
+    processChunk(chunk).forEach(function (line) {
+      t.equal(line, expected.shift())
     })
   })
+})
 
-  cp.stdout.pipe(process.stdout)
-  cp.stderr.pipe(process.stderr)
+test('node version', function (t) {
+  var range = '4.x || 6.x'
+  var active = semver.satisfies(process.version, range)
+
+  t.plan(active ? 2 : 1)
+
+  process.chdir('./test/node-version')
+  var cp = start('../../index.js')
+
+  cp.on('close', function (code) {
+    t.equal(code, 0)
+    process.chdir('../..')
+  })
+
+  cp.stdout.on('data', function (chunk) {
+    processChunk(chunk).forEach(function (line) {
+      if (!active) t.fail('this node version should not produce any output')
+      t.ok(semver.satisfies(line, range))
+    })
+  })
 })
 
 test('missing versions', function (t) {
   process.chdir('./test/missing-versions')
   var found = false
-  var cp = exec('../../index.js')
+  var cp = start('../../index.js', true)
   cp.stderr.on('data', function (chunk) {
     if (!found && /Error: Missing "versions" property for 27mhz/.test(chunk)) {
       found = true
@@ -95,3 +97,20 @@ test('missing versions', function (t) {
     t.end()
   })
 })
+
+function start (path, silence) {
+  var cp = exec(path || './index.js')
+
+  if (!silence) {
+    cp.stdout.pipe(process.stdout)
+    cp.stderr.pipe(process.stderr)
+  }
+
+  return cp
+}
+
+function processChunk (chunk) {
+  return chunk.toString().trim().split('\n').filter(function (line) {
+    return line.indexOf('-- ') !== 0 // ignore output from tav it self
+  })
+}

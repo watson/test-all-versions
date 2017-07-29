@@ -1,0 +1,4 @@
+is-it-weekend:
+  node: 4.x || 6.x
+  versions: 1.0.0
+  commands: node --version
