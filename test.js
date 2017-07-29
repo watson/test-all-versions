@@ -35,6 +35,7 @@ test('invalid module', function (t) {
 })
 
 test('yaml', function (t) {
+  // custom `is-it-weekend` test - start
   var range = '4.x || 6.x'
   var versionTest = semver.satisfies(process.version, range)
 
@@ -54,6 +55,7 @@ test('yaml', function (t) {
       return semver.satisfies(line, range)
     })
   }
+  // custom `is-it-weekend` test - end
 
   var cp = exec('./index.js')
 
