@@ -46,13 +46,24 @@ function loadYaml () {
 
   Object.keys(conf)
     .filter(function (name) {
+      // In case the key isn't the name of the package, but instead a package
+      // name have been set manually using the name property
+      name = conf[name].name || name
+
       // Only run selected test if TAV environment variable is used
       return whitelist ? whitelist.indexOf(name) !== -1 : true
     })
     .map(function (name) {
       var m = conf[name]
+
+      // In case the key isn't the name of the package, but instead a package
+      // name have been set manually using the name property
+      name = conf[name].name || name
+
       if (m.node && !semver.satisfies(process.version, m.node)) return
+
       var cmds = Array.isArray(m.commands) ? m.commands : [m.commands]
+
       if (m.peerDependencies) {
         var peerDependencies = Array.isArray(m.peerDependencies) ? m.peerDependencies : [m.peerDependencies]
       }

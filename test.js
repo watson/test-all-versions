@@ -98,6 +98,25 @@ test('missing versions', function (t) {
   })
 })
 
+test('custom name', function (t) {
+  var expected = ['2.0.1', '2.0.0']
+  t.plan(3)
+
+  process.chdir('./test/custom-name')
+  var cp = start('../../index.js')
+
+  cp.on('close', function (code) {
+    t.equal(code, 0)
+    process.chdir('../..')
+  })
+
+  cp.stdout.on('data', function (chunk) {
+    processChunk(chunk).forEach(function (line) {
+      t.equal(line, expected.shift())
+    })
+  })
+})
+
 function start (path, silence) {
   var cp = exec(path || './index.js')
 
