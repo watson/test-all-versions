@@ -8,7 +8,7 @@ var yaml = require('js-yaml')
 var once = require('once')
 var pkgVersions = require('npm-package-versions')
 var semver = require('semver')
-var afterAll = require('after-all')
+var afterAll = require('after-all-results')
 var resolve = require('resolve')
 var fresh = require('fresh-require')
 var install = require('spawn-npm-install')
@@ -88,32 +88,19 @@ function runTests (err) {
 }
 
 function test (opts, cb) {
-  var peerDependencies = opts.peerDependencies || []
-
-  var next = afterAll(function (err) {
+  pkgVersions(opts.name, function (err, versions) {
     if (err) return cb(err)
 
-    pkgVersions(opts.name, function (err, versions) {
-      if (err) return cb(err)
-
-      versions = versions.filter(function (version) {
-        return semver.satisfies(version, opts.semver)
-      })
-
-      run()
-
-      function run (err) {
-        if (err || versions.length === 0) return cb(err)
-        testVersion(opts, versions.pop(), run)
-      }
+    versions = versions.filter(function (version) {
+      return semver.satisfies(version, opts.semver)
     })
-  })
 
-  peerDependencies.forEach(function (peerDependency) {
-    var parts = peerDependency.split('@')
-    var name = parts[0]
-    var version = parts[1]
-    ensurePackage(name, version, 'peerDependency', next())
+    run()
+
+    function run (err) {
+      if (err || versions.length === 0) return cb(err)
+      testVersion(opts, versions.pop(), run)
+    }
   })
 }
 
@@ -124,15 +111,23 @@ function testVersion (test, version, cb) {
 
   function run (err) {
     if (err || i === test.cmds.length) return cb(err)
-    pretest(function (err) {
+
+    var packages = [].concat(test.peerDependencies || [], test.name + '@' + version)
+
+    ensurePackages(packages, function (err) {
       if (err) return cb(err)
-      testCmd(test.name, version, test.cmds[i++], function (code) {
-        if (code !== 0) {
-          var err = new Error('Test exited with code ' + code)
-          err.exitCode = code
-          cb(err)
-        }
-        posttest(run)
+
+      pretest(function (err) {
+        if (err) return cb(err)
+
+        testCmd(test.name, version, test.cmds[i++], function (code) {
+          if (code !== 0) {
+            var err = new Error('Test exited with code ' + code)
+            err.exitCode = code
+            cb(err)
+          }
+          posttest(run)
+        })
       })
     })
   }
@@ -151,11 +146,8 @@ function testVersion (test, version, cb) {
 }
 
 function testCmd (name, version, cmd, cb) {
-  ensurePackage(name, version, 'target', function (err) {
-    if (err) return cb(err)
-    console.log('-- running test "%s" with %s', cmd, name)
-    execute(cmd, name + '@' + version, cb)
-  })
+  console.log('-- running test "%s" with %s', cmd, name)
+  execute(cmd, name + '@' + version, cb)
 }
 
 function execute (cmd, name, cb) {
@@ -184,40 +176,52 @@ function execute (cmd, name, cb) {
   cp.stderr.pipe(process.stderr)
 }
 
-function ensurePackage (name, version, type, cb) {
-  var installName = name + '@' + version
-
-  resolve(name + '/package.json', {basedir: process.cwd()}, function (err, pkg) {
-    var installedVersion = err ? null : fresh(pkg, require).version
-
-    if (installedVersion && semver.satisfies(installedVersion, version)) {
-      console.log('-- reusing already installed %s %s', type, installName)
-      cb()
-      return
-    }
-
-    attemptInstall()
+function ensurePackages (packages, cb) {
+  var next = afterAll(function (_, packages) {
+    packages = packages.filter(function (pkg) { return !!pkg })
+    if (packages.length > 0) attemptInstall(packages.join(' '), cb)
+    else cb()
   })
 
-  function attemptInstall (attempts) {
-    if (!attempts) attempts = 1
-    console.log('-- installing %s %s', type, installName)
+  packages.forEach(function (dependency) {
+    var done = next()
+    var parts = dependency.split('@')
+    var name = parts[0]
+    var version = parts[1]
 
-    var done = once(function (err) {
-      if (!err) return cb()
+    resolve(name + '/package.json', {basedir: process.cwd()}, function (err, pkg) {
+      var installedVersion = err ? null : fresh(pkg, require).version
 
-      if (++attempts <= 10) {
-        console.warn('-- error installing %s %s (%s) - retrying (%d/10)...', type, installName, err.message, attempts)
-        attemptInstall(attempts)
-      } else {
-        console.error('-- error installing %s %s - aborting!', type, installName)
-        console.error(err.stack)
-        cb(err.code || 1)
+      if (installedVersion && semver.satisfies(installedVersion, version)) {
+        console.log('-- reusing already installed %s', dependency)
+        done()
+        return
       }
-    })
 
-    install(installName, {noSave: true}, done).on('error', done)
-  }
+      done(null, dependency)
+    })
+  })
+}
+
+function attemptInstall (installStr, attempts, cb) {
+  if (typeof attempts === 'function') return attemptInstall(installStr, 1, attempts)
+
+  console.log('-- installing %s', installStr)
+
+  var done = once(function (err) {
+    if (!err) return cb()
+
+    if (++attempts <= 10) {
+      console.warn('-- error installing %s (%s) - retrying (%d/10)...', installStr, err.message, attempts)
+      attemptInstall(installStr, attempts, cb)
+    } else {
+      console.error('-- error installing %s - aborting!', installStr)
+      console.error(err.stack)
+      cb(err.code || 1)
+    }
+  })
+
+  install(installStr, {noSave: true}, done).on('error', done)
 }
 
 function done (err) {

@@ -8,7 +8,7 @@ patterns:
     - echo patterns-b
 27mhz:
   peerDependencies: nearest-date@1.0.0
-  versions: 1.0.1
+  versions: 1.0.0
   commands: node -e "console.log(require('./node_modules/nearest-date/package.json').version)"
 b2f:
   versions: 1.0.0
