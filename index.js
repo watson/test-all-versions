@@ -80,6 +80,7 @@ function loadYaml () {
         semver: m.versions,
         cmds: cmds,
         peerDependencies: peerDependencies,
+        preinstall: m.preinstall,
         pretest: m.pretest,
         posttest: m.posttest
       })
@@ -119,22 +120,32 @@ function testVersion (test, version, cb) {
 
     var packages = [].concat(test.peerDependencies || [], test.name + '@' + version)
 
-    ensurePackages(packages, function (err) {
+    preinstall(function (err) {
       if (err) return cb(err)
 
-      pretest(function (err) {
+      ensurePackages(packages, function (err) {
         if (err) return cb(err)
 
-        testCmd(test.name, version, test.cmds[i++], function (code) {
-          if (code !== 0) {
-            var err = new Error('Test exited with code ' + code)
-            err.exitCode = code
-            cb(err)
-          }
-          posttest(run)
+        pretest(function (err) {
+          if (err) return cb(err)
+
+          testCmd(test.name, version, test.cmds[i++], function (code) {
+            if (code !== 0) {
+              var err = new Error('Test exited with code ' + code)
+              err.exitCode = code
+              cb(err)
+            }
+            posttest(run)
+          })
         })
       })
     })
+  }
+
+  function preinstall (cb) {
+    if (!test.preinstall) return process.nextTick(cb)
+    console.log('-- running preinstall "%s" for %s', test.preinstall, test.name)
+    execute(test.preinstall, test.name, cb)
   }
 
   function pretest (cb) {
