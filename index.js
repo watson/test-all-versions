@@ -186,13 +186,13 @@ function ensurePackages (packages, cb) {
     // npm5 will uninstall everything that's not in the local package.json and
     // not in the install string. This might make tests fail. So if we detect
     // npm5, we just force install everything all the time.
-    attemptInstall(packages.join(' '), cb)
+    attemptInstall(packages, cb)
     return
   }
 
   var next = afterAll(function (_, packages) {
     packages = packages.filter(function (pkg) { return !!pkg })
-    if (packages.length > 0) attemptInstall(packages.join(' '), cb)
+    if (packages.length > 0) attemptInstall(packages, cb)
     else cb()
   })
 
@@ -216,25 +216,25 @@ function ensurePackages (packages, cb) {
   })
 }
 
-function attemptInstall (installStr, attempts, cb) {
-  if (typeof attempts === 'function') return attemptInstall(installStr, 1, attempts)
+function attemptInstall (packages, attempts, cb) {
+  if (typeof attempts === 'function') return attemptInstall(packages, 1, attempts)
 
-  console.log('-- installing %s', installStr)
+  console.log('-- installing %j', packages)
 
   var done = once(function (err) {
     if (!err) return cb()
 
     if (++attempts <= 10) {
-      console.warn('-- error installing %s (%s) - retrying (%d/10)...', installStr, err.message, attempts)
-      attemptInstall(installStr, attempts, cb)
+      console.warn('-- error installing %j (%s) - retrying (%d/10)...', packages, err.message, attempts)
+      attemptInstall(packages, attempts, cb)
     } else {
-      console.error('-- error installing %s - aborting!', installStr)
+      console.error('-- error installing %j - aborting!', packages)
       console.error(err.stack)
       cb(err.code || 1)
     }
   })
 
-  install(installStr, {noSave: true}, done).on('error', done)
+  install(packages, {noSave: true}, done).on('error', done)
 }
 
 function done (err) {
