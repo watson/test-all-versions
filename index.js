@@ -182,6 +182,8 @@ function execute (cmd, name, cb) {
 }
 
 function ensurePackages (packages, cb) {
+  console.log('-- required packages %j', packages)
+
   if (npm5plus) {
     // npm5 will uninstall everything that's not in the local package.json and
     // not in the install string. This might make tests fail. So if we detect
