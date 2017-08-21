@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict'
 
+require('longjohn')
+
 var exec = require('child_process').exec
 var execSync = require('child_process').execSync
 var fs = require('fs')
