@@ -25,6 +25,7 @@ tav mysql ^2.0.0 node test.js
 
 - `--help` - Output usage info
 - `--quiet` - Don't output stdout from tests unless an error occors
+- `--verbose` - Output a lot of information while running
 - `--ci` - When running `tav` together with a `.tav.yml` file, use this
   argument to only run the tests on a CI server. This allows you to add
   `tav` to your `npm test` command without spending time running tav

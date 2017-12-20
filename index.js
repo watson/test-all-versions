@@ -29,6 +29,7 @@ if (argv.help || argv.h) {
   console.log('Options:')
   console.log('  -h, --help   show this help')
   console.log('  -q, --quiet  don\'t output stdout from tests unless an error occors')
+  console.log('  --verbose    output a lot of information while running')
   console.log('  --ci         only run on CI servers when using .tav.yml file')
   process.exit()
 }
@@ -42,6 +43,8 @@ if (argv._.length === 0) {
     cmds: [argv._.join(' ')] // test command
   })
 }
+
+var verbose = argv.verbose ? console.log.bind(console) : function () {}
 
 runTests()
 
@@ -94,12 +97,18 @@ function runTests (err) {
 }
 
 function test (opts, cb) {
+  verbose('-- preparing test', opts)
+
   pkgVersions(opts.name, function (err, versions) {
     if (err) return cb(err)
+
+    verbose('-- available package versions:', versions.join(', '))
 
     versions = versions.filter(function (version) {
       return semver.satisfies(version, opts.semver)
     })
+
+    verbose('-- package versions matching "%s":', opts.semver, versions.join(', '))
 
     run()
 
@@ -215,8 +224,12 @@ function ensurePackages (packages, cb) {
     var name = parts[0]
     var version = parts[1]
 
+    verbose('-- resolving %s/package.json in %s', name, process.cwd())
+
     resolve(name + '/package.json', {basedir: process.cwd()}, function (err, pkg) {
       var installedVersion = err ? null : fresh(pkg, require).version
+
+      verbose('-- installed version:', installedVersion)
 
       if (installedVersion && semver.satisfies(installedVersion, version)) {
         console.log('-- reusing already installed %s', dependency)
@@ -247,7 +260,10 @@ function attemptInstall (packages, attempts, cb) {
     }
   })
 
-  install(packages, {noSave: true}, done).on('error', done)
+  var opts = {noSave: true}
+  if (argv.verbose) opts.stdio = 'inherit'
+
+  install(packages, opts, done).on('error', done)
 }
 
 function done (err) {
