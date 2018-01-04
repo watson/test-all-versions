@@ -4,6 +4,8 @@
 var exec = require('child_process').exec
 var execSync = require('child_process').execSync
 var fs = require('fs')
+var os = require('os')
+var util = require('util')
 var isCI = require('is-ci')
 var yaml = require('js-yaml')
 var once = require('once')
@@ -13,6 +15,9 @@ var afterAll = require('after-all-results')
 var resolve = require('resolve')
 var fresh = require('fresh-require')
 var install = require('spawn-npm-install')
+var differ = require('ansi-diff-stream')
+var cliSpinners = require('cli-spinners')
+var logSymbols = require('log-symbols')
 var argv = require('minimist')(process.argv.slice(2))
 
 // execSync was added in Node.js v0.11.12, so if it doesn't exist, we'll just
@@ -30,6 +35,7 @@ if (argv.help || argv.h) {
   console.log('  -h, --help   show this help')
   console.log('  -q, --quiet  don\'t output stdout from tests unless an error occors')
   console.log('  --verbose    output a lot of information while running')
+  console.log('  --compat     output just module version compatibility - no errors')
   console.log('  --ci         only run on CI servers when using .tav.yml file')
   process.exit()
 }
@@ -44,7 +50,16 @@ if (argv._.length === 0) {
   })
 }
 
-var verbose = argv.verbose ? console.log.bind(console) : function () {}
+var log, verbose, spinner
+if (argv.compat) {
+  // "hack" to make the spinner spin more
+  log = verbose = function () { spinner && spinner() }
+  var diff = differ()
+  diff.pipe(process.stdout)
+} else {
+  verbose = argv.verbose ? console.log.bind(console) : function () {}
+  log = console.log.bind(console)
+}
 
 runTests()
 
@@ -99,6 +114,8 @@ function runTests (err) {
 function test (opts, cb) {
   verbose('-- preparing test', opts)
 
+  if (argv.compat) console.log('Testing compatibility with %s:', opts.name)
+
   pkgVersions(opts.name, function (err, versions) {
     if (err) return cb(err)
 
@@ -114,7 +131,16 @@ function test (opts, cb) {
 
     function run (err) {
       if (err || versions.length === 0) return cb(err)
-      testVersion(opts, versions.pop(), run)
+      var version = versions.pop()
+      if (argv.compat) spinner = getSpinner(version)()
+      testVersion(opts, version, function (err) {
+        if (argv.compat) {
+          spinner.done(!err)
+          run()
+        } else {
+          run(err)
+        }
+      })
     }
   })
 }
@@ -154,25 +180,25 @@ function testVersion (test, version, cb) {
 
   function preinstall (cb) {
     if (!test.preinstall) return process.nextTick(cb)
-    console.log('-- running preinstall "%s" for %s', test.preinstall, test.name)
+    log('-- running preinstall "%s" for %s', test.preinstall, test.name)
     execute(test.preinstall, test.name, cb)
   }
 
   function pretest (cb) {
     if (!test.pretest) return process.nextTick(cb)
-    console.log('-- running pretest "%s" for %s', test.pretest, test.name)
+    log('-- running pretest "%s" for %s', test.pretest, test.name)
     execute(test.pretest, test.name, cb)
   }
 
   function posttest (cb) {
     if (!test.posttest) return process.nextTick(cb)
-    console.log('-- running posttest "%s" for %s', test.posttest, test.name)
+    log('-- running posttest "%s" for %s', test.posttest, test.name)
     execute(test.posttest, test.name, cb)
   }
 }
 
 function testCmd (name, version, cmd, cb) {
-  console.log('-- running test "%s" with %s', cmd, name)
+  log('-- running test "%s" with %s', cmd, name)
   execute(cmd, name + '@' + version, cb)
 }
 
@@ -180,8 +206,8 @@ function execute (cmd, name, cb) {
   var cp = exec(cmd)
   cp.on('close', function (code) {
     if (code !== 0 && stdout) {
-      console.log('-- detected failing command, flushing stdout...')
-      console.log(stdout)
+      log('-- detected failing command, flushing stdout...')
+      log(stdout)
     }
     cb(code)
   })
@@ -190,20 +216,26 @@ function execute (cmd, name, cb) {
     console.error(err.stack)
     cb(err.code || 1)
   })
-  if (!argv.quiet && !argv.q) {
-    cp.stdout.pipe(process.stdout)
+  if (argv.compat) {
+    // "hack" to make the spinner move
+    cp.stdout.on('data', spinner)
+    cp.stderr.on('data', spinner)
   } else {
-    // store output in case we needed if an error occurs
-    var stdout = ''
-    cp.stdout.on('data', function (chunk) {
-      stdout += chunk
-    })
+    if (!argv.quiet && !argv.q) {
+      cp.stdout.pipe(process.stdout)
+    } else {
+      // store output in case we needed if an error occurs
+      var stdout = ''
+      cp.stdout.on('data', function (chunk) {
+        stdout += chunk
+      })
+    }
+    cp.stderr.pipe(process.stderr)
   }
-  cp.stderr.pipe(process.stderr)
 }
 
 function ensurePackages (packages, cb) {
-  console.log('-- required packages %j', packages)
+  log('-- required packages %j', packages)
 
   if (npm5plus) {
     // npm5 will uninstall everything that's not in the local package.json and
@@ -233,7 +265,7 @@ function ensurePackages (packages, cb) {
       verbose('-- installed version:', installedVersion)
 
       if (installedVersion && semver.satisfies(installedVersion, version)) {
-        console.log('-- reusing already installed %s', dependency)
+        log('-- reusing already installed %s', dependency)
         done()
         return
       }
@@ -246,7 +278,7 @@ function ensurePackages (packages, cb) {
 function attemptInstall (packages, attempts, cb) {
   if (typeof attempts === 'function') return attemptInstall(packages, 1, attempts)
 
-  console.log('-- installing %j', packages)
+  log('-- installing %j', packages)
 
   var done = once(function (err) {
     if (!err) return cb()
@@ -267,10 +299,25 @@ function attemptInstall (packages, attempts, cb) {
   install(packages, opts, done).on('error', done)
 }
 
+function getSpinner (str) {
+  var frames = cliSpinners.dots.frames
+  var i = 0
+  var spin = function () {
+    diff.write(util.format('%s %s', frames[i++ % frames.length], str))
+    return spin
+  }
+  spin.done = function (sucess) {
+    diff.write(util.format('%s %s', sucess ? logSymbols.success : logSymbols.error, str))
+    diff.reset()
+    process.stdout.write(os.EOL)
+  }
+  return spin
+}
+
 function done (err) {
   if (err) {
-    console.log('-- fatal: ' + err.message)
+    log('-- fatal: ' + err.message)
     process.exit(err.exitCode || 1)
   }
-  console.log('-- ok')
+  log('-- ok')
 }
