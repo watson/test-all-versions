@@ -143,6 +143,7 @@ function testVersion (test, version, cb) {
               var err = new Error('Test exited with code ' + code)
               err.exitCode = code
               cb(err)
+              return
             }
             posttest(run)
           })
