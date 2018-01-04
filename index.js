@@ -17,7 +17,6 @@ var fresh = require('fresh-require')
 var install = require('spawn-npm-install')
 var differ = require('ansi-diff-stream')
 var cliSpinners = require('cli-spinners')
-var logSymbols = require('log-symbols')
 var argv = require('minimist')(process.argv.slice(2))
 
 // execSync was added in Node.js v0.11.12, so if it doesn't exist, we'll just
@@ -52,6 +51,7 @@ if (argv._.length === 0) {
 
 var log, verbose, spinner
 if (argv.compat) {
+  var logSymbols = require('log-symbols') // Doesn't work with Node.js <4
   // "hack" to make the spinner spin more
   log = verbose = function () { spinner && spinner() }
   var diff = differ()
