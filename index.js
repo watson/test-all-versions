@@ -303,12 +303,14 @@ function getSpinner (str) {
   var frames = cliSpinners.dots.frames
   var i = 0
   var spin = function () {
+    if (spin.isDone) return spin
     diff.write(util.format('%s %s', frames[i++ % frames.length], str))
     return spin
   }
   spin.done = function (sucess) {
     diff.write(util.format('%s %s', sucess ? logSymbols.success : logSymbols.error, str))
     diff.reset()
+    spin.isDone = true
     process.stdout.write(os.EOL)
   }
   return spin
