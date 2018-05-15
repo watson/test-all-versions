@@ -43,8 +43,8 @@ if (argv._.length === 0) {
   loadYaml()
 } else {
   tests.push({
-    name: argv._.shift(),    // module name
-    semver: argv._.shift(),  // module semver
+    name: argv._.shift(), // module name
+    semver: argv._.shift(), // module semver
     cmds: [argv._.join(' ')] // test command
   })
 }

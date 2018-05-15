@@ -39,11 +39,11 @@ test('yaml', function (t) {
 
   var expected = [
     'pretest', 'b2f-a', 'posttest', 'pretest', 'b2f-b', 'posttest', // b2f@1.0.0
-    '1.0.0',                    // 27mhz@1.0.1 peerDependency
+    '1.0.0', // 27mhz@1.0.1 peerDependency
     'patterns-a', 'patterns-b', // patterns@1.0.2
     'patterns-a', 'patterns-b', // patterns@0.0.1
-    'roundround-a',             // roundround@0.2.0
-    'roundround-a'              // roundround@0.1.0
+    'roundround-a', // roundround@0.2.0
+    'roundround-a' // roundround@0.1.0
   ]
 
   var cp = start()
