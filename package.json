@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "standard": "^12.0.1",
-    "tape": "^4.9.0"
+    "tape": "^4.9.1"
   },
   "scripts": {
     "pretest": "npm prune",
