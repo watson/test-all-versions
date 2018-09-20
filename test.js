@@ -48,12 +48,9 @@ test('yaml', function (t) {
 
   var cp = start()
 
-  cp.on('close', function (code) {
+  processStdout(cp, function (code, lines) {
     t.equal(code, 0)
-  })
-
-  cp.stdout.on('data', function (chunk) {
-    processChunk(chunk).forEach(function (line) {
+    lines.forEach(function (line) {
       t.equal(line, expected.shift())
     })
   })
@@ -68,16 +65,13 @@ test('node version', function (t) {
   process.chdir('./test/node-version')
   var cp = start('../../index.js')
 
-  cp.on('close', function (code) {
+  processStdout(cp, function (code, lines) {
     t.equal(code, 0)
-    process.chdir('../..')
-  })
-
-  cp.stdout.on('data', function (chunk) {
-    processChunk(chunk).forEach(function (line) {
+    lines.forEach(function (line) {
       if (!active) t.fail('this node version should not produce any output')
       t.ok(semver.satisfies(line, range))
     })
+    process.chdir('../..')
   })
 })
 
@@ -105,15 +99,12 @@ test('custom name', function (t) {
   process.chdir('./test/custom-name')
   var cp = start('../../index.js')
 
-  cp.on('close', function (code) {
+  processStdout(cp, function (code, lines) {
     t.equal(code, 0)
-    process.chdir('../..')
-  })
-
-  cp.stdout.on('data', function (chunk) {
-    processChunk(chunk).forEach(function (line) {
+    lines.forEach(function (line) {
       t.equal(line, expected.shift())
     })
+    process.chdir('../..')
   })
 })
 
@@ -126,6 +117,17 @@ function start (path, silence) {
   }
 
   return cp
+}
+
+function processStdout (cp, cb) {
+  var str = ''
+  cp.stdout.on('data', function (chunk) {
+    str += chunk
+  })
+  cp.on('close', function (code) {
+    var lines = processChunk(str)
+    cb(code, lines)
+  })
 }
 
 function processChunk (chunk) {
