@@ -21,7 +21,7 @@ var argv = require('minimist')(process.argv.slice(2))
 
 // execSync was added in Node.js v0.11.12, so if it doesn't exist, we'll just
 // assume that npm5 isn't used either
-var npm5plus = execSync && semver.gte(execSync('npm -v', {encoding: 'utf-8'}).trim(), '5.0.0')
+var npm5plus = execSync && semver.gte(execSync('npm -v', { encoding: 'utf-8' }).trim(), '5.0.0')
 
 process.env.PATH = 'node_modules' + require('path').sep + '.bin:' + process.env.PATH
 
@@ -259,7 +259,7 @@ function ensurePackages (packages, cb) {
 
     verbose('-- resolving %s/package.json in %s', name, process.cwd())
 
-    resolve(name + '/package.json', {basedir: process.cwd()}, function (err, pkg) {
+    resolve(name + '/package.json', { basedir: process.cwd() }, function (err, pkg) {
       var installedVersion = err ? null : requireUncached(pkg).version
 
       verbose('-- installed version:', installedVersion)
@@ -293,7 +293,7 @@ function attemptInstall (packages, attempts, cb) {
     }
   })
 
-  var opts = {noSave: true}
+  var opts = { noSave: true }
   if (argv.verbose) opts.stdio = 'inherit'
 
   install(packages, opts, done).on('error', done)
