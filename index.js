@@ -17,11 +17,16 @@ var importFresh = require('import-fresh')
 var install = require('spawn-npm-install')
 var differ = require('ansi-diff-stream')
 var cliSpinners = require('cli-spinners')
+var which = require('which')
 var argv = require('minimist')(process.argv.slice(2))
 
 // execSync was added in Node.js v0.11.12, so if it doesn't exist, we'll just
 // assume that npm5 isn't used either
 var npm5plus = execSync && semver.gte(execSync('npm -v', { encoding: 'utf-8' }).trim(), '5.0.0')
+
+// in case npm ever gets installed as a dependency, make sure we always access
+// it from it's original location
+var npmCmd = which.sync(process.platform === 'win32' ? 'npm.cmd' : 'npm')
 
 process.env.PATH = 'node_modules' + require('path').sep + '.bin:' + process.env.PATH
 
@@ -293,7 +298,7 @@ function attemptInstall (packages, attempts, cb) {
     }
   })
 
-  var opts = { noSave: true }
+  var opts = { noSave: true, command: npmCmd }
   if (argv.verbose) opts.stdio = 'inherit'
 
   install(packages, opts, done).on('error', done)
