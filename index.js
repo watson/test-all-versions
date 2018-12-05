@@ -13,7 +13,7 @@ var pkgVersions = require('npm-package-versions')
 var semver = require('semver')
 var afterAll = require('after-all-results')
 var resolve = require('resolve')
-var requireUncached = require('require-uncached')
+var importFresh = require('import-fresh')
 var install = require('spawn-npm-install')
 var differ = require('ansi-diff-stream')
 var cliSpinners = require('cli-spinners')
@@ -260,7 +260,7 @@ function ensurePackages (packages, cb) {
     verbose('-- resolving %s/package.json in %s', name, process.cwd())
 
     resolve(name + '/package.json', { basedir: process.cwd() }, function (err, pkg) {
-      var installedVersion = err ? null : requireUncached(pkg).version
+      var installedVersion = err ? null : importFresh(pkg).version
 
       verbose('-- installed version:', installedVersion)
 
