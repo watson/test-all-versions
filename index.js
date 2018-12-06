@@ -286,6 +286,8 @@ function attemptInstall (packages, attempts, cb) {
   log('-- installing %j', packages)
 
   var done = once(function (err) {
+    clearTimeout(timeout)
+
     if (!err) return cb()
 
     if (++attempts <= 10) {
@@ -300,6 +302,14 @@ function attemptInstall (packages, attempts, cb) {
 
   var opts = { noSave: true, command: npmCmd }
   if (argv.verbose) opts.stdio = 'inherit'
+
+  // npm on Travis have a tendency to hang every once in a while
+  // (https://twitter.com/wa7son/status/1006859826549477378). We'll use a
+  // timeout to abort and retry the install in case it hasn't finished within 2
+  // minutes.
+  var timeout = setTimeout(function () {
+    done(new Error('npm install took too long'))
+  }, 2 * 60 * 1000)
 
   install(packages, opts, done).on('error', done)
 }
