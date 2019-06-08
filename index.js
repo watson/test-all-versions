@@ -151,34 +151,28 @@ function test (opts, cb) {
 }
 
 function testVersion (test, version, cb) {
-  var i = 0
+  var cmdIndex = 0
 
-  run()
-
-  function run (err) {
-    if (err || i === test.cmds.length) return cb(err)
-
+  preinstall(function (err) {
+    if (err) return cb(err)
     var packages = [].concat(test.peerDependencies || [], test.name + '@' + version)
+    ensurePackages(packages, runNextCmd)
+  })
 
-    preinstall(function (err) {
+  function runNextCmd (err) {
+    if (err || cmdIndex === test.cmds.length) return cb(err)
+
+    pretest(function (err) {
       if (err) return cb(err)
 
-      ensurePackages(packages, function (err) {
-        if (err) return cb(err)
-
-        pretest(function (err) {
-          if (err) return cb(err)
-
-          testCmd(test.name, version, test.cmds[i++], function (code) {
-            if (code !== 0) {
-              var err = new Error('Test exited with code ' + code)
-              err.exitCode = code
-              cb(err)
-              return
-            }
-            posttest(run)
-          })
-        })
+      testCmd(test.name, version, test.cmds[cmdIndex++], function (code) {
+        if (code !== 0) {
+          var err = new Error('Test exited with code ' + code)
+          err.exitCode = code
+          cb(err)
+          return
+        }
+        posttest(runNextCmd)
       })
     })
   }
