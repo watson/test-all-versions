@@ -82,30 +82,34 @@ function loadYaml () {
       return whitelist ? whitelist.indexOf(name) !== -1 : true
     })
     .map(function (name) {
-      const m = conf[name]
+      const testCase = conf[name]
 
       // In case the key isn't the name of the package, but instead a package
       // name have been set manually using the name property
       name = conf[name].name || name
 
-      if (m.node && !semver.satisfies(process.version, m.node)) return
+      if (testCase.node && !semver.satisfies(process.version, testCase.node)) return
 
-      const cmds = Array.isArray(m.commands) ? m.commands : [m.commands]
+      const cmds = Array.isArray(testCase.commands)
+        ? testCase.commands
+        : [testCase.commands]
 
-      const peerDependencies = m.peerDependencies
-        ? (Array.isArray(m.peerDependencies) ? m.peerDependencies : [m.peerDependencies])
+      const peerDependencies = testCase.peerDependencies
+        ? (Array.isArray(testCase.peerDependencies)
+          ? testCase.peerDependencies
+          : [testCase.peerDependencies])
         : null
 
-      if (!m.versions) throw new Error('Missing "versions" property for ' + name)
+      if (!testCase.versions) throw new Error('Missing "versions" property for ' + name)
 
       tests.push({
         name: name,
-        semver: m.versions,
+        semver: testCase.versions,
         cmds: cmds,
         peerDependencies: peerDependencies,
-        preinstall: m.preinstall,
-        pretest: m.pretest,
-        posttest: m.posttest
+        preinstall: testCase.preinstall,
+        pretest: testCase.pretest,
+        posttest: testCase.posttest
       })
     })
 }
