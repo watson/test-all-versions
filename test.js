@@ -7,7 +7,7 @@ const test = require('tape')
 test('tests succeed', function (t) {
   const cp = exec('./index.js roundround "<=0.2.0" -- node -e "process.exit\\(0\\)"')
   cp.on('close', function (code) {
-    t.equal(code, 0)
+    t.strictEqual(code, 0)
     t.end()
   })
   cp.stdout.pipe(process.stdout)
@@ -17,7 +17,7 @@ test('tests succeed', function (t) {
 test('tests fail', function (t) {
   const cp = exec('./index.js roundround "<=0.2.0" -- node -e "process.exit\\(1\\)"')
   cp.on('close', function (code) {
-    t.equal(code, 1)
+    t.strictEqual(code, 1)
     t.end()
   })
   cp.stdout.pipe(process.stdout)
@@ -27,7 +27,7 @@ test('tests fail', function (t) {
 test('invalid module', function (t) {
   const cp = exec('./index.js test-all-versions-' + Date.now() + ' ^1.0.0 npm test')
   cp.on('close', function (code) {
-    t.equal(code, 1)
+    t.strictEqual(code, 1)
     t.end()
   })
   cp.stdout.pipe(process.stdout)
@@ -49,9 +49,9 @@ test('yaml', function (t) {
   const cp = start()
 
   processStdout(cp, function (code, lines) {
-    t.equal(code, 0)
+    t.strictEqual(code, 0)
     lines.forEach(function (line) {
-      t.equal(line, expected.shift())
+      t.strictEqual(line, expected.shift())
     })
   })
 })
@@ -66,7 +66,7 @@ test('node version', function (t) {
   const cp = start('../../index.js')
 
   processStdout(cp, function (code, lines) {
-    t.equal(code, 0)
+    t.strictEqual(code, 0)
     lines.forEach(function (line) {
       if (!active) t.fail('this node version should not produce any output')
       t.ok(semver.satisfies(line, range))
@@ -85,7 +85,7 @@ test('missing versions', function (t) {
     }
   })
   cp.on('close', function (code) {
-    t.equal(code, semver.satisfies(process.version, '0.10.x') ? 8 : 1)
+    t.strictEqual(code, semver.satisfies(process.version, '0.10.x') ? 8 : 1)
     t.ok(found)
     process.chdir('../..')
     t.end()
@@ -100,9 +100,9 @@ test('array of test cases', function (t) {
   const cp = start('../../index.js')
 
   processStdout(cp, function (code, lines) {
-    t.equal(code, 0)
+    t.strictEqual(code, 0)
     lines.forEach(function (line) {
-      t.equal(line, expected.shift())
+      t.strictEqual(line, expected.shift())
     })
     process.chdir('../..')
   })
