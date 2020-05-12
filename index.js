@@ -42,13 +42,7 @@ if (argv.help || argv.h) {
   process.exit()
 }
 
-const tests = argv._.length === 0
-  ? loadYaml()
-  : [{
-    name: argv._.shift(), // module name
-    versions: argv._.shift(), // module semver
-    commands: [argv._.join(' ')] // test command
-  }]
+const tests = argv._.length === 0 ? getConfFromFile() : getConfFromArgs()
 
 let log, verbose, spinner, logSymbols, diff
 if (argv.compat) {
@@ -64,8 +58,24 @@ if (argv.compat) {
 
 runTests()
 
+function getConfFromFile () {
+  return normalizeConf(loadYaml())
+}
+
+function getConfFromArgs () {
+  return normalizeConf({
+    [argv._.shift()]: { // module name
+      versions: argv._.shift(), // module semver
+      commands: argv._.join(' ') // test command
+    }
+  })
+}
+
 function loadYaml () {
-  const conf = yaml.safeLoad(fs.readFileSync('.tav.yml').toString())
+  return yaml.safeLoad(fs.readFileSync('.tav.yml').toString())
+}
+
+function normalizeConf (conf) {
   const whitelist = process.env.TAV ? process.env.TAV.split(',') : null
 
   return flatten(Object.keys(conf)
