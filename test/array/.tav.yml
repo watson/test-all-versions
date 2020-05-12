@@ -1,0 +1,5 @@
+flatten-obj:
+  - versions: '2.0.0'
+    commands: node -e "console.log(require('../../node_modules/flatten-obj/package.json').version)"
+  - versions: '2.0.1'
+    commands: node -e "console.log(require('../../node_modules/flatten-obj/package.json').version)"

@@ -92,11 +92,11 @@ test('missing versions', function (t) {
   })
 })
 
-test('custom name', function (t) {
+test('array of test cases', function (t) {
   const expected = ['2.0.1', '2.0.0']
   t.plan(3)
 
-  process.chdir('./test/custom-name')
+  process.chdir('./test/array')
   const cp = start('../../index.js')
 
   processStdout(cp, function (code, lines) {

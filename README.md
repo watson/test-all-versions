@@ -96,22 +96,15 @@ graphql:
 
 #### Multiple test-groups per module
 
-Normally the name of the module that should be installed is specified
-using the root property names. This comes with the limitation that you
-can only specify one test-group per module.
-
-To get around this limitation, you can specify the module to install
-using the optional `name` property:
+If you need multiple test-groups for the same module, use `-` to specify
+an array of test-groups:
 
 ```yml
-mysql-test-1:
-  name: mysql
-  versions: ^1.0.0
-  commands: node test/mysql-1x.js
-mysql-test-2:
-  name: mysql
-  versions: ^2.0.0
-  commands: node test/mysql-2x.js
+mysql:
+  - versions: ^1.0.0
+    commands: node test/mysql-1x.js
+  - versions: ^2.0.0
+    commands: node test/mysql-2x.js
 ```
 
 #### Whitelist tests with environment variables

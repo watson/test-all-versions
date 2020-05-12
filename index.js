@@ -74,42 +74,34 @@ function loadYaml () {
 
   Object.keys(conf)
     .filter(function (name) {
-      // In case the key isn't the name of the package, but instead a package
-      // name have been set manually using the name property
-      name = conf[name].name || name
-
       // Only run selected test if TAV environment variable is used
       return whitelist ? whitelist.indexOf(name) !== -1 : true
     })
     .map(function (name) {
-      const testCase = conf[name]
+      (Array.isArray(conf[name]) ? conf[name] : [conf[name]]).forEach(function (testCase, index) {
+        if (testCase.node && !semver.satisfies(process.version, testCase.node)) return
 
-      // In case the key isn't the name of the package, but instead a package
-      // name have been set manually using the name property
-      name = conf[name].name || name
+        const cmds = Array.isArray(testCase.commands)
+          ? testCase.commands
+          : [testCase.commands]
 
-      if (testCase.node && !semver.satisfies(process.version, testCase.node)) return
+        const peerDependencies = testCase.peerDependencies
+          ? (Array.isArray(testCase.peerDependencies)
+            ? testCase.peerDependencies
+            : [testCase.peerDependencies])
+          : null
 
-      const cmds = Array.isArray(testCase.commands)
-        ? testCase.commands
-        : [testCase.commands]
+        if (!testCase.versions) throw new Error(`Missing "versions" property for ${name}#${index}`)
 
-      const peerDependencies = testCase.peerDependencies
-        ? (Array.isArray(testCase.peerDependencies)
-          ? testCase.peerDependencies
-          : [testCase.peerDependencies])
-        : null
-
-      if (!testCase.versions) throw new Error('Missing "versions" property for ' + name)
-
-      tests.push({
-        name: name,
-        semver: testCase.versions,
-        cmds: cmds,
-        peerDependencies: peerDependencies,
-        preinstall: testCase.preinstall,
-        pretest: testCase.pretest,
-        posttest: testCase.posttest
+        tests.push({
+          name: name,
+          semver: testCase.versions,
+          cmds: cmds,
+          peerDependencies: peerDependencies,
+          preinstall: testCase.preinstall,
+          pretest: testCase.pretest,
+          posttest: testCase.posttest
+        })
       })
     })
 }
