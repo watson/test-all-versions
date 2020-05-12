@@ -46,8 +46,8 @@ const tests = argv._.length === 0
   ? loadYaml()
   : [{
     name: argv._.shift(), // module name
-    semver: argv._.shift(), // module semver
-    cmds: [argv._.join(' ')] // test command
+    versions: argv._.shift(), // module semver
+    commands: [argv._.join(' ')] // test command
   }]
 
 let log, verbose, spinner, logSymbols, diff
@@ -68,7 +68,7 @@ function loadYaml () {
   const conf = yaml.safeLoad(fs.readFileSync('.tav.yml').toString())
   const whitelist = process.env.TAV ? process.env.TAV.split(',') : null
 
-  return Array.prototype.concat.apply([], Object.keys(conf)
+  return flatten(Object.keys(conf)
     .filter(function (name) {
       // Only run selected test if TAV environment variable is used
       return whitelist ? whitelist.indexOf(name) !== -1 : true
@@ -76,7 +76,7 @@ function loadYaml () {
     .map(function (name) {
       const moduleConf = conf[name]
       const normalized = { name }
-      normalized.jobs = moduleConf.jobs || Array.isArray(moduleConf) ? moduleConf : [moduleConf]
+      normalized.jobs = moduleConf.jobs || toArray(moduleConf)
       return normalized
     })
     .map(function ({ name, jobs }) {
@@ -85,27 +85,13 @@ function loadYaml () {
           return !job.node || semver.satisfies(process.version, job.node)
         })
         .map(job => {
-          const cmds = Array.isArray(job.commands)
-            ? job.commands
-            : [job.commands]
-
-          const peerDependencies = job.peerDependencies
-            ? (Array.isArray(job.peerDependencies)
-              ? job.peerDependencies
-              : [job.peerDependencies])
-            : null
-
           if (!job.versions) throw new Error(`Missing "versions" property for ${name}`)
 
-          return {
-            name,
-            semver: job.versions,
-            cmds,
-            peerDependencies,
-            preinstall: job.preinstall,
-            pretest: job.pretest,
-            posttest: job.posttest
-          }
+          job.name = name
+          job.commands = toArray(job.commands)
+          job.peerDependencies = toArray(job.peerDependencies)
+
+          return job
         })
     }))
 }
@@ -127,10 +113,10 @@ function test (opts, cb) {
     verbose('-- available package versions:', versions.join(', '))
 
     versions = versions.filter(function (version) {
-      return semver.satisfies(version, opts.semver)
+      return semver.satisfies(version, opts.versions)
     })
 
-    verbose('-- package versions matching "%s":', opts.semver, versions.join(', '))
+    verbose('-- package versions matching "%s":', opts.versions, versions.join(', '))
 
     run()
 
@@ -155,17 +141,17 @@ function testVersion (test, version, cb) {
 
   preinstall(function (err) {
     if (err) return cb(err)
-    const packages = [].concat(test.peerDependencies || [], test.name + '@' + version)
+    const packages = [].concat(test.peerDependencies, test.name + '@' + version)
     ensurePackages(packages, runNextCmd)
   })
 
   function runNextCmd (err) {
-    if (err || cmdIndex === test.cmds.length) return cb(err)
+    if (err || cmdIndex === test.commands.length) return cb(err)
 
     pretest(function (err) {
       if (err) return cb(err)
 
-      testCmd(test.name, version, test.cmds[cmdIndex++], function (code) {
+      testCmd(test.name, version, test.commands[cmdIndex++], function (code) {
         if (code !== 0) {
           const err = new Error('Test exited with code ' + code)
           err.exitCode = code
@@ -331,4 +317,14 @@ function done (err) {
     process.exit(err.exitCode || 1)
   }
   log('-- ok')
+}
+
+function toArray (obj) {
+  return Array.isArray(obj)
+    ? obj
+    : (obj == null ? [] : [obj])
+}
+
+function flatten (arr) {
+  return Array.prototype.concat.apply([], arr)
 }
