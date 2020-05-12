@@ -1,36 +1,36 @@
 #!/usr/bin/env node
 'use strict'
 
-var exec = require('child_process').exec
-var execSync = require('child_process').execSync
-var fs = require('fs')
-var os = require('os')
-var util = require('util')
-var isCI = require('is-ci')
-var yaml = require('js-yaml')
-var once = require('once')
-var pkgVersions = require('npm-package-versions')
-var semver = require('semver')
-var afterAll = require('after-all-results')
-var resolve = require('resolve')
-var importFresh = require('import-fresh')
-var install = require('spawn-npm-install')
-var differ = require('ansi-diff-stream')
-var cliSpinners = require('cli-spinners')
-var which = require('which')
-var argv = require('minimist')(process.argv.slice(2))
+const exec = require('child_process').exec
+const execSync = require('child_process').execSync
+const fs = require('fs')
+const os = require('os')
+const util = require('util')
+const isCI = require('is-ci')
+const yaml = require('js-yaml')
+const once = require('once')
+const pkgVersions = require('npm-package-versions')
+const semver = require('semver')
+const afterAll = require('after-all-results')
+const resolve = require('resolve')
+const importFresh = require('import-fresh')
+const install = require('spawn-npm-install')
+const differ = require('ansi-diff-stream')
+const cliSpinners = require('cli-spinners')
+const which = require('which')
+const argv = require('minimist')(process.argv.slice(2))
 
 // execSync was added in Node.js v0.11.12, so if it doesn't exist, we'll just
 // assume that npm5 isn't used either
-var npm5plus = execSync && semver.gte(execSync('npm -v', { encoding: 'utf-8' }).trim(), '5.0.0')
+const npm5plus = execSync && semver.gte(execSync('npm -v', { encoding: 'utf-8' }).trim(), '5.0.0')
 
 // in case npm ever gets installed as a dependency, make sure we always access
 // it from it's original location
-var npmCmd = which.sync(process.platform === 'win32' ? 'npm.cmd' : 'npm')
+const npmCmd = which.sync(process.platform === 'win32' ? 'npm.cmd' : 'npm')
 
 process.env.PATH = 'node_modules' + require('path').sep + '.bin:' + process.env.PATH
 
-var tests = []
+const tests = []
 
 if (argv.help || argv.h) {
   console.log('Usage: tav [options] [<module> <semver> <command> [args...]]')
@@ -54,12 +54,12 @@ if (argv._.length === 0) {
   })
 }
 
-var log, verbose, spinner
+let log, verbose, spinner, logSymbols, diff
 if (argv.compat) {
-  var logSymbols = require('log-symbols') // Doesn't work with Node.js <4
+  logSymbols = require('log-symbols') // Doesn't work with Node.js <4
   // "hack" to make the spinner spin more
   log = verbose = function () { spinner && spinner() }
-  var diff = differ()
+  diff = differ()
   diff.pipe(process.stdout)
 } else {
   verbose = argv.verbose ? console.log.bind(console) : function () {}
@@ -69,8 +69,8 @@ if (argv.compat) {
 runTests()
 
 function loadYaml () {
-  var conf = yaml.safeLoad(fs.readFileSync('.tav.yml').toString())
-  var whitelist = process.env.TAV ? process.env.TAV.split(',') : null
+  const conf = yaml.safeLoad(fs.readFileSync('.tav.yml').toString())
+  const whitelist = process.env.TAV ? process.env.TAV.split(',') : null
 
   Object.keys(conf)
     .filter(function (name) {
@@ -82,7 +82,7 @@ function loadYaml () {
       return whitelist ? whitelist.indexOf(name) !== -1 : true
     })
     .map(function (name) {
-      var m = conf[name]
+      const m = conf[name]
 
       // In case the key isn't the name of the package, but instead a package
       // name have been set manually using the name property
@@ -90,11 +90,11 @@ function loadYaml () {
 
       if (m.node && !semver.satisfies(process.version, m.node)) return
 
-      var cmds = Array.isArray(m.commands) ? m.commands : [m.commands]
+      const cmds = Array.isArray(m.commands) ? m.commands : [m.commands]
 
-      if (m.peerDependencies) {
-        var peerDependencies = Array.isArray(m.peerDependencies) ? m.peerDependencies : [m.peerDependencies]
-      }
+      const peerDependencies = m.peerDependencies
+        ? (Array.isArray(m.peerDependencies) ? m.peerDependencies : [m.peerDependencies])
+        : null
 
       if (!m.versions) throw new Error('Missing "versions" property for ' + name)
 
@@ -136,7 +136,7 @@ function test (opts, cb) {
 
     function run (err) {
       if (err || versions.length === 0) return cb(err)
-      var version = versions.pop()
+      const version = versions.pop()
       if (argv.compat) spinner = getSpinner(version)()
       testVersion(opts, version, function (err) {
         if (argv.compat) {
@@ -151,11 +151,11 @@ function test (opts, cb) {
 }
 
 function testVersion (test, version, cb) {
-  var cmdIndex = 0
+  let cmdIndex = 0
 
   preinstall(function (err) {
     if (err) return cb(err)
-    var packages = [].concat(test.peerDependencies || [], test.name + '@' + version)
+    const packages = [].concat(test.peerDependencies || [], test.name + '@' + version)
     ensurePackages(packages, runNextCmd)
   })
 
@@ -167,7 +167,7 @@ function testVersion (test, version, cb) {
 
       testCmd(test.name, version, test.cmds[cmdIndex++], function (code) {
         if (code !== 0) {
-          var err = new Error('Test exited with code ' + code)
+          const err = new Error('Test exited with code ' + code)
           err.exitCode = code
           cb(err)
           return
@@ -202,9 +202,10 @@ function testCmd (name, version, cmd, cb) {
 }
 
 function execute (cmd, name, cb) {
-  var cp = exec(cmd)
+  let stdout = ''
+  const cp = exec(cmd)
   cp.on('close', function (code) {
-    if (code !== 0 && stdout) {
+    if (code !== 0) {
       log('-- detected failing command, flushing stdout...')
       log(stdout)
     }
@@ -224,7 +225,6 @@ function execute (cmd, name, cb) {
       cp.stdout.pipe(process.stdout)
     } else {
       // store output in case we needed if an error occurs
-      var stdout = ''
       cp.stdout.on('data', function (chunk) {
         stdout += chunk
       })
@@ -244,22 +244,22 @@ function ensurePackages (packages, cb) {
     return
   }
 
-  var next = afterAll(function (_, packages) {
+  const next = afterAll(function (_, packages) {
     packages = packages.filter(function (pkg) { return !!pkg })
     if (packages.length > 0) attemptInstall(packages, cb)
     else cb()
   })
 
   packages.forEach(function (dependency) {
-    var done = next()
-    var parts = dependency.split('@')
-    var name = parts[0]
-    var version = parts[1]
+    const done = next()
+    const parts = dependency.split('@')
+    const name = parts[0]
+    const version = parts[1]
 
     verbose('-- resolving %s/package.json in %s', name, process.cwd())
 
     resolve(name + '/package.json', { basedir: process.cwd() }, function (err, pkg) {
-      var installedVersion = err ? null : importFresh(pkg).version
+      const installedVersion = err ? null : importFresh(pkg).version
 
       verbose('-- installed version:', installedVersion)
 
@@ -279,7 +279,7 @@ function attemptInstall (packages, attempts, cb) {
 
   log('-- installing %j', packages)
 
-  var done = once(function (err) {
+  const done = once(function (err) {
     clearTimeout(timeout)
 
     if (!err) return cb()
@@ -294,14 +294,14 @@ function attemptInstall (packages, attempts, cb) {
     }
   })
 
-  var opts = { noSave: true, command: npmCmd }
+  const opts = { noSave: true, command: npmCmd }
   if (argv.verbose) opts.stdio = 'inherit'
 
   // npm on Travis have a tendency to hang every once in a while
   // (https://twitter.com/wa7son/status/1006859826549477378). We'll use a
   // timeout to abort and retry the install in case it hasn't finished within 2
   // minutes.
-  var timeout = setTimeout(function () {
+  const timeout = setTimeout(function () {
     done(new Error('npm install took too long'))
   }, 2 * 60 * 1000)
 
@@ -309,9 +309,9 @@ function attemptInstall (packages, attempts, cb) {
 }
 
 function getSpinner (str) {
-  var frames = cliSpinners.dots.frames
-  var i = 0
-  var spin = function () {
+  const frames = cliSpinners.dots.frames
+  let i = 0
+  const spin = function () {
     if (spin.isDone) return spin
     diff.write(util.format('%s %s', frames[i++ % frames.length], str))
     return spin

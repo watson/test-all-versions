@@ -1,11 +1,11 @@
 'use strict'
 
-var exec = require('child_process').exec
-var semver = require('semver')
-var test = require('tape')
+const exec = require('child_process').exec
+const semver = require('semver')
+const test = require('tape')
 
 test('tests succeed', function (t) {
-  var cp = exec('./index.js roundround "<=0.2.0" -- node -e "process.exit\\(0\\)"')
+  const cp = exec('./index.js roundround "<=0.2.0" -- node -e "process.exit\\(0\\)"')
   cp.on('close', function (code) {
     t.equal(code, 0)
     t.end()
@@ -15,7 +15,7 @@ test('tests succeed', function (t) {
 })
 
 test('tests fail', function (t) {
-  var cp = exec('./index.js roundround "<=0.2.0" -- node -e "process.exit\\(1\\)"')
+  const cp = exec('./index.js roundround "<=0.2.0" -- node -e "process.exit\\(1\\)"')
   cp.on('close', function (code) {
     t.equal(code, 1)
     t.end()
@@ -25,7 +25,7 @@ test('tests fail', function (t) {
 })
 
 test('invalid module', function (t) {
-  var cp = exec('./index.js test-all-versions-' + Date.now() + ' ^1.0.0 npm test')
+  const cp = exec('./index.js test-all-versions-' + Date.now() + ' ^1.0.0 npm test')
   cp.on('close', function (code) {
     t.equal(code, 1)
     t.end()
@@ -37,7 +37,7 @@ test('invalid module', function (t) {
 test('yaml', function (t) {
   t.plan(14)
 
-  var expected = [
+  const expected = [
     'pretest', 'b2f-a', 'posttest', 'pretest', 'b2f-b', 'posttest', // b2f@1.0.0
     '1.0.0', // 27mhz@1.0.1 peerDependency
     'patterns-a', 'patterns-b', // patterns@1.0.2
@@ -46,7 +46,7 @@ test('yaml', function (t) {
     'roundround-a' // roundround@0.1.0
   ]
 
-  var cp = start()
+  const cp = start()
 
   processStdout(cp, function (code, lines) {
     t.equal(code, 0)
@@ -57,13 +57,13 @@ test('yaml', function (t) {
 })
 
 test('node version', function (t) {
-  var range = '4.x || 6.x'
-  var active = semver.satisfies(process.version, range)
+  const range = '4.x || 6.x'
+  const active = semver.satisfies(process.version, range)
 
   t.plan(active ? 2 : 1)
 
   process.chdir('./test/node-version')
-  var cp = start('../../index.js')
+  const cp = start('../../index.js')
 
   processStdout(cp, function (code, lines) {
     t.equal(code, 0)
@@ -77,8 +77,8 @@ test('node version', function (t) {
 
 test('missing versions', function (t) {
   process.chdir('./test/missing-versions')
-  var found = false
-  var cp = start('../../index.js', true)
+  let found = false
+  const cp = start('../../index.js', true)
   cp.stderr.on('data', function (chunk) {
     if (!found && /Error: Missing "versions" property for 27mhz/.test(chunk)) {
       found = true
@@ -93,11 +93,11 @@ test('missing versions', function (t) {
 })
 
 test('custom name', function (t) {
-  var expected = ['2.0.1', '2.0.0']
+  const expected = ['2.0.1', '2.0.0']
   t.plan(3)
 
   process.chdir('./test/custom-name')
-  var cp = start('../../index.js')
+  const cp = start('../../index.js')
 
   processStdout(cp, function (code, lines) {
     t.equal(code, 0)
@@ -109,7 +109,7 @@ test('custom name', function (t) {
 })
 
 function start (path, silence) {
-  var cp = exec(path || './index.js')
+  const cp = exec(path || './index.js')
 
   if (!silence) {
     cp.stdout.pipe(process.stdout)
@@ -120,12 +120,12 @@ function start (path, silence) {
 }
 
 function processStdout (cp, cb) {
-  var str = ''
+  let str = ''
   cp.stdout.on('data', function (chunk) {
     str += chunk
   })
   cp.on('close', function (code) {
-    var lines = processChunk(str)
+    const lines = processChunk(str)
     cb(code, lines)
   })
 }
