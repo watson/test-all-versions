@@ -30,8 +30,6 @@ const npmCmd = which.sync(process.platform === 'win32' ? 'npm.cmd' : 'npm')
 
 process.env.PATH = 'node_modules' + require('path').sep + '.bin:' + process.env.PATH
 
-const tests = []
-
 if (argv.help || argv.h) {
   console.log('Usage: tav [options] [<module> <semver> <command> [args...]]')
   console.log()
@@ -44,15 +42,13 @@ if (argv.help || argv.h) {
   process.exit()
 }
 
-if (argv._.length === 0) {
-  loadYaml()
-} else {
-  tests.push({
+const tests = argv._.length === 0
+  ? loadYaml()
+  : [{
     name: argv._.shift(), // module name
     semver: argv._.shift(), // module semver
     cmds: [argv._.join(' ')] // test command
-  })
-}
+  }]
 
 let log, verbose, spinner, logSymbols, diff
 if (argv.compat) {
@@ -72,38 +68,46 @@ function loadYaml () {
   const conf = yaml.safeLoad(fs.readFileSync('.tav.yml').toString())
   const whitelist = process.env.TAV ? process.env.TAV.split(',') : null
 
-  Object.keys(conf)
+  return Array.prototype.concat.apply([], Object.keys(conf)
     .filter(function (name) {
       // Only run selected test if TAV environment variable is used
       return whitelist ? whitelist.indexOf(name) !== -1 : true
     })
     .map(function (name) {
-      (Array.isArray(conf[name]) ? conf[name] : [conf[name]]).forEach(function (testCase, index) {
-        if (testCase.node && !semver.satisfies(process.version, testCase.node)) return
-
-        const cmds = Array.isArray(testCase.commands)
-          ? testCase.commands
-          : [testCase.commands]
-
-        const peerDependencies = testCase.peerDependencies
-          ? (Array.isArray(testCase.peerDependencies)
-            ? testCase.peerDependencies
-            : [testCase.peerDependencies])
-          : null
-
-        if (!testCase.versions) throw new Error(`Missing "versions" property for ${name}#${index}`)
-
-        tests.push({
-          name: name,
-          semver: testCase.versions,
-          cmds: cmds,
-          peerDependencies: peerDependencies,
-          preinstall: testCase.preinstall,
-          pretest: testCase.pretest,
-          posttest: testCase.posttest
-        })
-      })
+      const moduleConf = conf[name]
+      const normalized = { name }
+      normalized.jobs = moduleConf.jobs || Array.isArray(moduleConf) ? moduleConf : [moduleConf]
+      return normalized
     })
+    .map(function ({ name, jobs }) {
+      return jobs
+        .filter(job => {
+          return !job.node || semver.satisfies(process.version, job.node)
+        })
+        .map(job => {
+          const cmds = Array.isArray(job.commands)
+            ? job.commands
+            : [job.commands]
+
+          const peerDependencies = job.peerDependencies
+            ? (Array.isArray(job.peerDependencies)
+              ? job.peerDependencies
+              : [job.peerDependencies])
+            : null
+
+          if (!job.versions) throw new Error(`Missing "versions" property for ${name}`)
+
+          return {
+            name,
+            semver: job.versions,
+            cmds,
+            peerDependencies,
+            preinstall: job.preinstall,
+            pretest: job.pretest,
+            posttest: job.posttest
+          }
+        })
+    }))
 }
 
 function runTests (err) {
