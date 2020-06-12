@@ -17,3 +17,25 @@ b2f:
     - echo b2f-a
     - echo b2f-b
   posttest: echo posttest
+throttling:
+  jobs:
+    - versions: 1.0.2
+      commands: echo throttling-a
+    - versions: 1.0.1
+      commands: echo throttling-b
+isobj:
+  versions: 1.0.0
+  env:
+    - a=1 b=2
+    - c=3
+  commands: "echo $a/$b/$c"
+after-all-results:
+  env:
+    - a=1 b=2
+    - c=3
+  jobs:
+    - versions: 2.0.0
+      env: c=4
+      commands: "echo $a/$b/$c"
+    - versions: 2.0.0
+      commands: "echo $a/$b/$c"

@@ -35,9 +35,17 @@ test('invalid module', function (t) {
 })
 
 test('yaml', function (t) {
-  t.plan(14)
+  t.plan(22)
 
   const expected = [
+    '//3', // after-all-results@2.0.0, c=3
+    '1/2/', // after-all-results@2.0.0, a=1 b=2
+    '//4', // after-all-results@2.0.0, c=4
+    '1/2/4', // after-all-results@2.0.0, a=1 b=2 c=4
+    '//3', // isobj@1.0.0, c=3
+    '1/2/', // isobj@1.0.0, a=1 b=2
+    'throttling-b', // throttling@1.0.1
+    'throttling-a', // throttling@1.0.2
     'pretest', 'b2f-a', 'posttest', 'pretest', 'b2f-b', 'posttest', // b2f@1.0.0
     '1.0.0', // 27mhz@1.0.1 peerDependency
     'patterns-a', 'patterns-b', // patterns@1.0.2

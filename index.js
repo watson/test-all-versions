@@ -9,7 +9,9 @@ const util = require('util')
 const isCI = require('is-ci')
 const yaml = require('js-yaml')
 const once = require('once')
+const merge = require('deepmerge')
 const pkgVersions = require('npm-package-versions')
+const parseEnvString = require('parse-env-string')
 const semver = require('semver')
 const afterAll = require('after-all-results')
 const resolve = require('resolve')
@@ -85,15 +87,13 @@ function normalizeConf (conf) {
     })
     .map(function (name) {
       const moduleConf = conf[name]
-      const normalized = { name }
+      const normalized = { name, env: moduleConf.jobs && moduleConf.env }
       normalized.jobs = moduleConf.jobs || toArray(moduleConf)
       return normalized
     })
-    .map(function ({ name, jobs }) {
-      return jobs
-        .filter(job => {
-          return !job.node || semver.satisfies(process.version, job.node)
-        })
+    .map(function ({ name, env: globalEnv, jobs }) {
+      return flatten(jobs
+        .filter(job => !job.node || semver.satisfies(process.version, job.node))
         .map(job => {
           if (!job.versions) throw new Error(`Missing "versions" property for ${name}`)
 
@@ -101,9 +101,29 @@ function normalizeConf (conf) {
           job.commands = toArray(job.commands)
           job.peerDependencies = toArray(job.peerDependencies)
 
-          return job
-        })
+          return mergeEnvMatrix(globalEnv, job.env).map(env => {
+            job.env = parseEnvString(env)
+            return merge({}, job)
+          })
+        }))
     }))
+}
+
+function mergeEnvMatrix (globalEnv, localEnv) {
+  globalEnv = toArray(globalEnv)
+  if (globalEnv.length === 0) globalEnv.push('')
+  localEnv = toArray(localEnv)
+  if (localEnv.length === 0) localEnv.push('')
+
+  const env = []
+
+  for (const e1 of globalEnv) {
+    for (const e2 of localEnv) {
+      env.push(e1 + ' ' + e2)
+    }
+  }
+
+  return env
 }
 
 function runTests (err) {
@@ -161,7 +181,7 @@ function testVersion (test, version, cb) {
     pretest(function (err) {
       if (err) return cb(err)
 
-      testCmd(test.name, version, test.commands[cmdIndex++], function (code) {
+      testCmd(test.name, version, test.commands[cmdIndex++], test.env, function (code) {
         if (code !== 0) {
           const err = new Error('Test exited with code ' + code)
           err.exitCode = code
@@ -192,14 +212,17 @@ function testVersion (test, version, cb) {
   }
 }
 
-function testCmd (name, version, cmd, cb) {
-  log('-- running test "%s" with %s', cmd, name)
-  execute(cmd, name + '@' + version, cb)
+function testCmd (name, version, cmd, env, cb) {
+  log('-- running test "%s" with %s (env: %O)', cmd, name, env)
+  const opts = { env: Object.assign({}, env, process.env) }
+  execute(cmd, name + '@' + version, opts, cb)
 }
 
-function execute (cmd, name, cb) {
+function execute (cmd, name, opts, cb) {
+  if (typeof opts === 'function') return execute(cmd, name, null, opts)
+
   let stdout = ''
-  const cp = exec(cmd)
+  const cp = exec(cmd, opts)
   cp.on('close', function (code) {
     if (code !== 0) {
       log('-- detected failing command, flushing stdout...')

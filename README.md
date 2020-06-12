@@ -107,6 +107,37 @@ mysql:
     commands: node test/mysql-2x.js
 ```
 
+#### Test matrix
+
+If you specify environment variables using the `env` key, the test
+commands will be run once per element in the `env` array. In the
+following example `node test/mysql.js` will run twice for each version
+matching `^2.0.0` - once with `FOO=1` and once with `BAR=2`.
+
+```yml
+mysql:
+  env:
+    - MYSQL_HOST=server1.example.net MYSQL_PWD=secret!
+    - MYSQL_HOST=server2.example.net
+  versions: ^2.0.0
+  commands: node test/mysql.js
+```
+
+If more than one test-case is needed for a given module, the environment
+variables can shared between them using the following syntax:
+
+```yml
+mysql:
+  env:
+    - MYSQL_HOST=server1.example.net MYSQL_PWD=secret!
+    - MYSQL_HOST=server2.example.net
+  jobs:
+    - versions: ^1.0.0
+      commands: node test/mysql-1x.js
+    - versions: ^2.0.0
+      commands: node test/mysql-2x.js
+```
+
 #### Whitelist tests with environment variables
 
 You can use the enironment variable `TAV` to limit which module from the
