@@ -1,15 +1,21 @@
 roundround:
   versions: <=0.2.0
   commands: echo roundround-a
+
+# Multiple test commands
 patterns:
   versions: <=1.0.2
   commands:
     - echo patterns-a
     - echo patterns-b
+
+# Peer dependencies
 27mhz:
   peerDependencies: nearest-date@1.0.0
   versions: 1.0.0
   commands: node -e "console.log(require('./node_modules/nearest-date/package.json').version)"
+
+# Setup and teardown logic
 b2f:
   versions: 1.0.0
   pretest: echo pretest
@@ -17,18 +23,24 @@ b2f:
     - echo b2f-a
     - echo b2f-b
   posttest: echo posttest
+
+# Multiple jobs for the same package
 throttling:
   jobs:
     - versions: 1.0.2
       commands: echo throttling-a
     - versions: 1.0.1
       commands: echo throttling-b
+
+# Build-matrix using environment variables
 isobj:
   versions: 1.0.0
   env:
     - a=1 b=2
     - c=3
   commands: "echo $a/$b/$c"
+
+# Mixing global and local environment variables
 after-all-results:
   env:
     - a=1 b=2
