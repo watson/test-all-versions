@@ -97,7 +97,7 @@ test('missing "versions" property', function (t) {
     }
   })
   cp.on('close', function (code) {
-    t.strictEqual(code, semver.satisfies(process.version, '0.10.x') ? 8 : 1)
+    t.strictEqual(code, 1)
     t.ok(found)
     process.chdir('../..')
     t.end()
