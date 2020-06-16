@@ -1,4 +1,6 @@
+.nyc_output
 .tav.yml
 .travis.yml
+coverage
 test
 test.js

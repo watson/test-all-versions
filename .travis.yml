@@ -5,3 +5,8 @@ node_js:
 - '12'
 - '10'
 - '8'
+after_success: >
+  node_version=$(node -v);
+  if [ ${node_version:0:4} = 'v12.' ]; then
+    npm run coverage;
+  fi
