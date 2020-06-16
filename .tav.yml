@@ -56,20 +56,20 @@ after-all-results:
 expire-array:
   jobs:
     - versions: "1.0.0 || 1.1.0"
-      peerDependencies: throttling@1.0.1
+      peerDependencies: base64-emoji@1.0.0
       commands: "node -e \"
         console.log(
-          'expire-array@%s: throttling@%s',
+          'expire-array@%s: base64-emoji@%s',
           require('./node_modules/expire-array/package.json').version,
-          require('./node_modules/throttling/package.json').version
+          require('./node_modules/base64-emoji/package.json').version
         )
       \""
     - versions: "1.0.0 || 1.1.0"
-      peerDependencies: throttling@1.0.2
+      peerDependencies: base64-emoji@2.0.0
       commands: "node -e \"
         console.log(
-          'expire-array@%s: throttling@%s',
+          'expire-array@%s: base64-emoji@%s',
           require('./node_modules/expire-array/package.json').version,
-          require('./node_modules/throttling/package.json').version
+          require('./node_modules/base64-emoji/package.json').version
         )
       \""
