@@ -18,6 +18,7 @@ patterns:
 # Setup and teardown logic
 b2f:
   versions: 1.0.0
+  preinstall: echo preinstall
   pretest: echo pretest
   commands:
     - echo b2f-a

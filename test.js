@@ -35,7 +35,7 @@ test('invalid module', function (t) {
 })
 
 test('yaml', function (t) {
-  t.plan(26)
+  t.plan(27)
 
   const expected = [
     'expire-array@1.1.0: base64-emoji@2.0.0',
@@ -50,7 +50,7 @@ test('yaml', function (t) {
     '1/2/', // isobj@1.0.0, a=1 b=2
     'throttling-b', // throttling@1.0.1
     'throttling-a', // throttling@1.0.2
-    'pretest', 'b2f-a', 'posttest', 'pretest', 'b2f-b', 'posttest', // b2f@1.0.0
+    'preinstall', 'pretest', 'b2f-a', 'posttest', 'pretest', 'b2f-b', 'posttest', // b2f@1.0.0
     '1.0.0', // 27mhz@1.0.1 peerDependency
     'patterns-a', 'patterns-b', // patterns@1.0.2
     'patterns-a', 'patterns-b', // patterns@0.0.1
