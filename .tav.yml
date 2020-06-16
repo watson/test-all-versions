@@ -51,3 +51,25 @@ after-all-results:
       commands: "echo $a/$b/$c"
     - versions: 2.0.0
       commands: "echo $a/$b/$c"
+
+# Build-matrix using peerDependencies but same package version
+expire-array:
+  jobs:
+    - versions: "1.0.0 || 1.1.0"
+      peerDependencies: throttling@1.0.1
+      commands: "node -e \"
+        console.log(
+          'expire-array@%s: throttling@%s',
+          require('./node_modules/expire-array/package.json').version,
+          require('./node_modules/throttling/package.json').version
+        )
+      \""
+    - versions: "1.0.0 || 1.1.0"
+      peerDependencies: throttling@1.0.2
+      commands: "node -e \"
+        console.log(
+          'expire-array@%s: throttling@%s',
+          require('./node_modules/expire-array/package.json').version,
+          require('./node_modules/throttling/package.json').version
+        )
+      \""

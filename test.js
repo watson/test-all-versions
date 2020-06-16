@@ -35,9 +35,13 @@ test('invalid module', function (t) {
 })
 
 test('yaml', function (t) {
-  t.plan(22)
+  t.plan(26)
 
   const expected = [
+    'expire-array@1.1.0: throttling@1.0.2',
+    'expire-array@1.0.0: throttling@1.0.2',
+    'expire-array@1.1.0: throttling@1.0.1',
+    'expire-array@1.0.0: throttling@1.0.1',
     '//3', // after-all-results@2.0.0, c=3
     '1/2/', // after-all-results@2.0.0, a=1 b=2
     '//4', // after-all-results@2.0.0, c=4
