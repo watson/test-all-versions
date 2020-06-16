@@ -22,9 +22,7 @@ const cliSpinners = require('cli-spinners')
 const which = require('which')
 const argv = require('minimist')(process.argv.slice(2))
 
-// execSync was added in Node.js v0.11.12, so if it doesn't exist, we'll just
-// assume that npm5 isn't used either
-const npm5plus = execSync && semver.gte(execSync('npm -v', { encoding: 'utf-8' }).trim(), '5.0.0')
+const npm5plus = semver.gte(execSync('npm -v', { encoding: 'utf-8' }).trim(), '5.0.0')
 
 // in case npm ever gets installed as a dependency, make sure we always access
 // it from it's original location
@@ -48,7 +46,7 @@ const tests = argv._.length === 0 ? getConfFromFile() : getConfFromArgs()
 
 let log, verbose, spinner, logSymbols, diff
 if (argv.compat) {
-  logSymbols = require('log-symbols') // Doesn't work with Node.js <4
+  logSymbols = require('log-symbols')
   // "hack" to make the spinner spin more
   log = verbose = function () { spinner && spinner() }
   diff = differ()
