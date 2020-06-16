@@ -94,6 +94,12 @@ graphql:
   commands: node test/graphql.js
 ```
 
+Usage:
+
+- `preinstall`: runs before `npm install`
+- `pretest`: runs before each command in the `commands` list
+- `posttest`: runs after each comamnd in the `commands` list
+
 #### Multiple test-groups per module
 
 If you need multiple test-groups for the same module, use `-` to specify
