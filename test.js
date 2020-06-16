@@ -87,7 +87,7 @@ test('node version', function (t) {
   })
 })
 
-test('missing versions', function (t) {
+test('missing "versions" property', function (t) {
   process.chdir('./test/missing-versions')
   let found = false
   const cp = start('../../index.js', true)
