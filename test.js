@@ -4,6 +4,23 @@ const exec = require('child_process').exec
 const semver = require('semver')
 const test = require('tape')
 
+const helpOptions = ['--help', '-h']
+helpOptions.forEach(function (option) {
+  test(`option ${option}`, function (t) {
+    const cp = exec(`./index.js ${option}`)
+    cp.stderr.on('data', function (chunk) {
+      t.fail('should not output anything on STDERR')
+    })
+    processStdout(cp, function (code, lines) {
+      t.strictEqual(code, 0, 'should exit with exit code 0')
+      t.strictEqual(lines.length, 8, 'should output 8 lines')
+      t.ok(lines[0].startsWith('Usage: tav'))
+      t.ok(lines[7].startsWith('  --ci'))
+      t.end()
+    })
+  })
+})
+
 test('tests succeed', function (t) {
   const cp = exec('./index.js roundround "<=0.2.0" -- node -e "process.exit\\(0\\)"')
   cp.on('close', function (code) {
