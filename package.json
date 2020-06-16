@@ -55,6 +55,9 @@
     "url": "https://github.com/watson/test-all-versions/issues"
   },
   "homepage": "https://github.com/watson/test-all-versions#readme",
+  "engines": {
+    "node": ">=8"
+  },
   "coordinates": [
     56.038446,
     12.620554
