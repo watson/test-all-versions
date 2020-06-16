@@ -28,8 +28,9 @@
     "tape": "^5.0.0"
   },
   "scripts": {
+    "lint": "standard",
     "pretest": "npm prune",
-    "test": "standard && tape test.js"
+    "test": "npm run lint && node test.js"
   },
   "repository": {
     "type": "git",
