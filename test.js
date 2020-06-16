@@ -120,6 +120,25 @@ test('array of test cases', function (t) {
   })
 })
 
+test('no matching versions', function (t) {
+  let stderr = false
+
+  process.chdir('./test/no-matching-versions')
+  const cp = start('../../index.js', true)
+
+  cp.stderr.on('data', function (chunk) {
+    t.strictEqual(chunk, '-- no versions of strip-lines matching 123.123.123\n')
+    stderr = true
+  })
+  processStdout(cp, function (code, lines) {
+    t.strictEqual(code, 0, 'should exit with code 0')
+    t.strictEqual(stderr, true, 'should output info on STDERR')
+    t.strictEqual(lines.length, 0, 'should not run any commands')
+    process.chdir('../..')
+    t.end()
+  })
+})
+
 function start (path, silence) {
   const cp = exec(path || './index.js')
 
