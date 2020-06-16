@@ -191,8 +191,7 @@ function testVersion (test, version, cb) {
         if (code !== 0) {
           const err = new Error('Test exited with code ' + code)
           err.exitCode = code
-          cb(err)
-          return
+          return cb(err)
         }
         posttest(runNextCmd)
       })
