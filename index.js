@@ -148,6 +148,12 @@ function test (opts, cb) {
 
     verbose('-- package versions matching "%s":', opts.versions, versions.join(', '))
 
+    if (versions.length === 0) {
+      console.warn('-- no versions of %s matching %s', opts.name, opts.versions)
+      cb() // TODO: Would be nicer if this was a proper error, but that would be a breaking change. Consider it for the next major
+      return
+    }
+
     run()
 
     function run (err) {
