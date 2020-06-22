@@ -9,6 +9,7 @@
     "after-all-results": "^2.0.0",
     "ansi-diff-stream": "^1.2.1",
     "cli-spinners": "^2.3.0",
+    "deepmerge": "^4.2.2",
     "import-fresh": "^3.2.1",
     "is-ci": "^2.0.0",
     "js-yaml": "^3.13.1",
@@ -24,7 +25,6 @@
   },
   "devDependencies": {
     "codecov": "^3.7.0",
-    "deepmerge": "^4.2.2",
     "nyc": "^15.1.0",
     "standard": "^14.3.4",
     "tape": "^5.0.0"
