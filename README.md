@@ -159,10 +159,10 @@ can also comma separate multiple names if needed:
 `TAV=mysql,pg`
 
 To see an example of this in action, check out the
-[`.travis.yml`](https://github.com/opbeat/opbeat-node/blob/master/.travis.yml)
+[`.travis.yml`](https://github.com/elastic/apm-agent-nodejs/blob/4d28d248118f734a2b498895f6ac2622c65c85fe/.travis.yml#L104-L105)
 and
-[`.tav.yml`](https://github.com/opbeat/opbeat-node/blob/master/.tav.yml)
-files under the [opbeat module](https://github.com/opbeat/opbeat-node).
+[`.tav.yml`](https://github.com/elastic/apm-agent-nodejs/blob/master/.tav.yml)
+files under the [Elastic APM Node.js Agent module](https://github.com/elastic/apm-agent-nodejs).
 
 ## License
 
