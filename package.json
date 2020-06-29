@@ -1,6 +1,6 @@
 {
   "name": "test-all-versions",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Run your test suite against all published versions of a dependency",
   "bin": {
     "tav": "index.js"
@@ -59,7 +59,7 @@
     "node": ">=8"
   },
   "coordinates": [
-    56.038446,
-    12.620554
+    56.0400132,
+    12.5912484
   ]
 }
