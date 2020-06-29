@@ -118,7 +118,8 @@ mysql:
 If you specify environment variables using the `env` key, the test
 commands will be run once per element in the `env` array. In the
 following example `node test/mysql.js` will run twice for each version
-matching `^2.0.0` - once with `FOO=1` and once with `BAR=2`.
+matching `^2.0.0` - once with `MYSQL_HOST=server1.example.net
+MYSQL_PWD=secret!` and once with `MYSQL_HOST=server2.example.net`.
 
 ```yml
 mysql:
