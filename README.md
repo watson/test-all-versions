@@ -164,6 +164,18 @@ and
 [`.tav.yml`](https://github.com/elastic/apm-agent-nodejs/blob/master/.tav.yml)
 files under the [Elastic APM Node.js Agent module](https://github.com/elastic/apm-agent-nodejs).
 
+
+#### Prerelease versions
+
+Set to suppress the default behavior of excluding prerelease tagged versions.
+
+```yml
+mysql:
+  versions: ^2.0.0
+  commands: tape test/mysql/*.js
+  includePrerelease: true
+```
+
 ## License
 
 [MIT](LICENSE)
