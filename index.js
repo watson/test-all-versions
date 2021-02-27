@@ -141,7 +141,7 @@ function test (opts, cb) {
     verbose('-- available package versions:', versions.join(', '))
 
     versions = versions.filter(function (version) {
-      return semver.satisfies(version, opts.versions)
+      return semver.satisfies(version, opts.versions, { includePrerelease: opts.includePrerelease })
     })
 
     verbose('-- package versions matching "%s":', opts.versions, versions.join(', '))
