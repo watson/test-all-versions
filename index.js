@@ -40,6 +40,9 @@ if (argv.help || argv.h) {
   console.log('  --compat     output just module version compatibility - no errors')
   console.log('  --ci         only run on CI servers when using .tav.yml file')
   process.exit()
+} else if (argv.version) {
+  console.log('tav ' + require(__dirname + '/package.json').version)
+  process.exit()
 }
 
 const tests = argv._.length === 0 ? getConfFromFile() : getConfFromArgs()
