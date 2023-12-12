@@ -34,14 +34,15 @@ if (argv.help || argv.h) {
   console.log('Usage: tav [options] [<module> <semver> <command> [args...]]')
   console.log()
   console.log('Options:')
-  console.log('  -h, --help   show this help')
-  console.log('  -q, --quiet  don\'t output stdout from tests unless an error occors')
-  console.log('  --verbose    output a lot of information while running')
-  console.log('  -n           do a dry-run (don\'t actually execute anything)')
-  console.log('  --compat     output just module version compatibility - no errors')
-  console.log('  --ci         only run on CI servers when using .tav.yml file')
+  console.log('  -h, --help     show this help')
+  console.log('  -v, --version  show the tav version and exit')
+  console.log('  -q, --quiet    don\'t output stdout from tests unless an error occurs')
+  console.log('  --verbose      output a lot of information while running')
+  console.log('  --dry-run      do a dry-run (don\'t actually execute anything)')
+  console.log('  --compat       output just module version compatibility - no errors')
+  console.log('  --ci           only run on CI servers when using .tav.yml file')
   process.exit()
-} else if (argv.version) {
+} else if (argv.version || argv.v) {
   console.log('tav ' + require(__dirname + '/package.json').version)
   process.exit()
 }
@@ -228,7 +229,7 @@ function testCmd (name, version, cmd, env, cb) {
 function execute (cmd, name, opts, cb) {
   if (typeof opts === 'function') return execute(cmd, name, null, opts)
 
-  if (argv.n) {
+  if (argv['dry-run']) {
     // Dry-run.
     setImmediate(cb, 0)
     return
@@ -310,7 +311,7 @@ function attemptInstall (packages, attempts, cb) {
   if (typeof attempts === 'function') return attemptInstall(packages, 1, attempts)
 
   log('-- installing %j', packages)
-  if (argv.n) {
+  if (argv['dry-run']) {
     // Dry-run.
     setImmediate(cb, 0)
     return
