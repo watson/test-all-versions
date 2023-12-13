@@ -24,14 +24,13 @@
     "which": "^2.0.2"
   },
   "devDependencies": {
-    "nyc": "^15.1.0",
     "standard": "^17.1.0",
     "tape": "^5.7.2"
   },
   "scripts": {
     "lint": "standard",
     "pretest": "npm prune",
-    "test": "npm run lint && nyc --reporter=lcov node test.js"
+    "test": "npm run lint && node test.js"
   },
   "repository": {
     "type": "git",
