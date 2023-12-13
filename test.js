@@ -144,11 +144,11 @@ test('no matching versions', function (t) {
   const cp = start('../../index.js', true)
 
   cp.stderr.on('data', function (chunk) {
-    t.strictEqual(chunk, '-- no versions of strip-lines matching 123.123.123\n')
+    t.strictEqual(chunk, '-- fatal: No versions of strip-lines matching 123.123.123\n')
     stderr = true
   })
   processStdout(cp, function (code, lines) {
-    t.strictEqual(code, 0, 'should exit with code 0')
+    t.strictEqual(code, 1, 'should exit with code 1')
     t.strictEqual(stderr, true, 'should output info on STDERR')
     t.strictEqual(lines.length, 0, 'should not run any commands')
     process.chdir('../..')
@@ -179,7 +179,10 @@ function processStdout (cp, cb) {
 }
 
 function processChunk (chunk) {
-  return chunk.toString().trim().split('\n').filter(function (line) {
+  const trimmed = chunk.toString().trim()
+  if (trimmed === '') return []
+
+  return trimmed.split('\n').filter(function (line) {
     return line.indexOf('-- ') !== 0 // ignore output from tav it self
   })
 }

@@ -152,8 +152,7 @@ function test (opts, cb) {
     verbose('-- %d package versions matching "%s":', versions.length, opts.versions, versions.join(', '))
 
     if (versions.length === 0) {
-      console.warn('-- no versions of %s matching %s', opts.name, opts.versions)
-      cb() // TODO: Would be nicer if this was a proper error, but that would be a breaking change. Consider it for the next major
+      cb(new Error(`No versions of ${opts.name} matching ${opts.versions}`))
       return
     }
 
@@ -365,7 +364,7 @@ function getSpinner (str) {
 
 function done (err) {
   if (err) {
-    log('-- fatal: ' + err.message)
+    console.error('-- fatal: ' + err.message)
     process.exit(err.exitCode || 1)
   }
   log('-- ok')
