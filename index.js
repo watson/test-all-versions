@@ -77,7 +77,7 @@ function getConfFromArgs () {
 }
 
 function loadYaml () {
-  return yaml.safeLoad(fs.readFileSync('.tav.yml').toString())
+  return yaml.load(fs.readFileSync('.tav.yml').toString())
 }
 
 function normalizeConf (conf) {
