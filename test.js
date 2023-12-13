@@ -86,7 +86,7 @@ test('yaml', function (t) {
 })
 
 test('node version', function (t) {
-  const range = '10.x || 12.x'
+  const range = '20.x || 21.x'
   const active = semver.satisfies(process.version, range)
 
   t.plan(active ? 2 : 1)
