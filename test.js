@@ -2,18 +2,26 @@
 
 const exec = require('child_process').exec
 const semver = require('semver')
-const test = require('tape')
+const t = require('tap')
+
+// Using a global test timeout because the "yaml" test needs extra time to run.
+// For some reason setting `{ timeout: ... }` directly on the test doesn't have any effect
+t.setTimeout(5 * 60 * 1000)
+
+t.afterEach(function () {
+  process.chdir(__dirname)
+})
 
 const helpOptions = ['--help', '-h']
 helpOptions.forEach(function (option) {
-  test(`option ${option}`, function (t) {
+  t.test(`option ${option}`, function (t) {
     const cp = exec(`./index.js ${option}`)
     cp.stderr.on('data', function (chunk) {
       t.fail('should not output anything on STDERR')
     })
     processStdout(cp, function (code, lines) {
-      t.strictEqual(code, 0, 'should exit with exit code 0')
-      t.strictEqual(lines.length, 10, 'should output 10 lines')
+      t.equal(code, 0, 'should exit with exit code 0')
+      t.equal(lines.length, 10, 'should output 10 lines')
       t.ok(lines[0].startsWith('Usage: tav'))
       t.ok(lines[9].startsWith('  --ci'))
       t.end()
@@ -21,71 +29,66 @@ helpOptions.forEach(function (option) {
   })
 })
 
-test('tests succeed', function (t) {
+t.test('tests succeed', function (t) {
   const cp = exec('./index.js roundround "<=0.2.0" -- node -e "process.exit\\(0\\)"')
   cp.on('close', function (code) {
-    t.strictEqual(code, 0)
+    t.equal(code, 0)
     t.end()
   })
   cp.stdout.pipe(process.stdout)
   cp.stderr.pipe(process.stderr)
 })
 
-test('tests fail', function (t) {
+t.test('tests fail', function (t) {
   const cp = exec('./index.js roundround "<=0.2.0" -- node -e "process.exit\\(1\\)"')
   cp.on('close', function (code) {
-    t.strictEqual(code, 1)
+    t.equal(code, 1)
     t.end()
   })
   cp.stdout.pipe(process.stdout)
   cp.stderr.pipe(process.stderr)
 })
 
-test('invalid module', function (t) {
+t.test('invalid module', function (t) {
   const cp = exec('./index.js test-all-versions-' + Date.now() + ' ^1.0.0 npm test')
   cp.on('close', function (code) {
-    t.strictEqual(code, 1)
+    t.equal(code, 1)
     t.end()
   })
   cp.stdout.pipe(process.stdout)
   cp.stderr.pipe(process.stderr)
 })
 
-test('yaml', function (t) {
-  t.plan(27)
-
-  const expected = [
-    'expire-array@1.1.0: base64-emoji@2.0.0',
-    'expire-array@1.0.0: base64-emoji@2.0.0',
-    'expire-array@1.1.0: base64-emoji@1.0.0',
-    'expire-array@1.0.0: base64-emoji@1.0.0',
-    '//3', // after-all-results@2.0.0, c=3
-    '1/2/', // after-all-results@2.0.0, a=1 b=2
-    '//4', // after-all-results@2.0.0, c=4
-    '1/2/4', // after-all-results@2.0.0, a=1 b=2 c=4
-    '//3', // isobj@1.0.0, c=3
-    '1/2/', // isobj@1.0.0, a=1 b=2
-    'throttling-b', // throttling@1.0.1
-    'throttling-a', // throttling@1.0.2
-    'preinstall', 'pretest', 'b2f-a', 'posttest', 'pretest', 'b2f-b', 'posttest', // b2f@1.0.0
-    '1.0.0', // 27mhz@1.0.1 peerDependency
-    'patterns-a', 'patterns-b', // patterns@1.0.2
-    'patterns-a', 'patterns-b', // patterns@0.0.1
-    'roundround-a', // roundround@0.2.0
-    'roundround-a' // roundround@0.1.0
-  ]
-
+t.test('yaml', function (t) {
   const cp = start()
 
   processStdout(cp, function (code, lines) {
-    t.strictEqual(code, 0)
-    lines.forEach(function (line) {
-      t.strictEqual(line, expected.shift())
-    })
+    t.equal(code, 0)
+    t.matchOnlyStrict(lines, [
+      'expire-array@1.1.0: base64-emoji@2.0.0',
+      'expire-array@1.0.0: base64-emoji@2.0.0',
+      'expire-array@1.1.0: base64-emoji@1.0.0',
+      'expire-array@1.0.0: base64-emoji@1.0.0',
+      '//3', // after-all-results@2.0.0, c=3
+      '1/2/', // after-all-results@2.0.0, a=1 b=2
+      '//4', // after-all-results@2.0.0, c=4
+      '1/2/4', // after-all-results@2.0.0, a=1 b=2 c=4
+      '//3', // isobj@1.0.0, c=3
+      '1/2/', // isobj@1.0.0, a=1 b=2
+      'throttling-b', // throttling@1.0.1
+      'throttling-a', // throttling@1.0.2
+      'preinstall', 'pretest', 'b2f-a', 'posttest', 'pretest', 'b2f-b', 'posttest', // b2f@1.0.0
+      '1.0.0', // 27mhz@1.0.1 peerDependency
+      'patterns-a', 'patterns-b', // patterns@1.0.2
+      'patterns-a', 'patterns-b', // patterns@0.0.1
+      'roundround-a', // roundround@0.2.0
+      'roundround-a' // roundround@0.1.0
+    ])
+    t.end()
   })
 })
 
-test('node version', function (t) {
+t.test('node version', function (t) {
   const range = '20.x || 21.x'
   const active = semver.satisfies(process.version, range)
 
@@ -95,16 +98,15 @@ test('node version', function (t) {
   const cp = start('../../index.js')
 
   processStdout(cp, function (code, lines) {
-    t.strictEqual(code, 0)
+    t.equal(code, 0)
     lines.forEach(function (line) {
       if (!active) t.fail('this node version should not produce any output')
       t.ok(semver.satisfies(line, range))
     })
-    process.chdir('../..')
   })
 })
 
-test('missing "versions" property', function (t) {
+t.test('missing "versions" property', function (t) {
   process.chdir('./test/missing-versions')
   let found = false
   const cp = start('../../index.js', true)
@@ -114,14 +116,13 @@ test('missing "versions" property', function (t) {
     }
   })
   cp.on('close', function (code) {
-    t.strictEqual(code, 1)
+    t.equal(code, 1)
     t.ok(found)
-    process.chdir('../..')
     t.end()
   })
 })
 
-test('array of test cases', function (t) {
+t.test('array of test cases', function (t) {
   const expected = ['2.0.1', '2.0.0']
   t.plan(3)
 
@@ -129,29 +130,27 @@ test('array of test cases', function (t) {
   const cp = start('../../index.js')
 
   processStdout(cp, function (code, lines) {
-    t.strictEqual(code, 0)
+    t.equal(code, 0)
     lines.forEach(function (line) {
-      t.strictEqual(line, expected.shift())
+      t.equal(line, expected.shift())
     })
-    process.chdir('../..')
   })
 })
 
-test('no matching versions', function (t) {
+t.test('no matching versions', function (t) {
   let stderr = false
 
   process.chdir('./test/no-matching-versions')
   const cp = start('../../index.js', true)
 
   cp.stderr.on('data', function (chunk) {
-    t.strictEqual(chunk, '-- fatal: No versions of strip-lines matching 123.123.123\n')
+    t.equal(chunk, '-- fatal: No versions of strip-lines matching 123.123.123\n')
     stderr = true
   })
   processStdout(cp, function (code, lines) {
-    t.strictEqual(code, 1, 'should exit with code 1')
-    t.strictEqual(stderr, true, 'should output info on STDERR')
-    t.strictEqual(lines.length, 0, 'should not run any commands')
-    process.chdir('../..')
+    t.equal(code, 1, 'should exit with code 1')
+    t.equal(stderr, true, 'should output info on STDERR')
+    t.equal(lines.length, 0, 'should not run any commands')
     t.end()
   })
 })

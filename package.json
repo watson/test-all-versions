@@ -25,12 +25,12 @@
   },
   "devDependencies": {
     "standard": "^17.1.0",
-    "tape": "^5.7.2"
+    "tap": "^18.6.1"
   },
   "scripts": {
     "lint": "standard",
     "pretest": "npm prune",
-    "test": "npm run lint && node test.js"
+    "test": "npm run lint && tap --coverage-report=lcovonly --allow-incomplete-coverage test.js"
   },
   "repository": {
     "type": "git",

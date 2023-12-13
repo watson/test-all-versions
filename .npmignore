@@ -1,4 +1,5 @@
 .github
+.tap
 .tav.yml
 test
 test.js
