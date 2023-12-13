@@ -4,7 +4,6 @@ Run your test suite against all published versions of a given
 dependency.
 
 [![npm](https://img.shields.io/npm/v/test-all-versions.svg)](https://www.npmjs.com/package/test-all-versions)
-[![Build status](https://travis-ci.org/watson/test-all-versions.svg?branch=master)](https://travis-ci.org/watson/test-all-versions)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)
 
 ## Usage
