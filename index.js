@@ -43,7 +43,7 @@ if (argv.help || argv.h) {
   console.log('  --ci           only run on CI servers when using .tav.yml file')
   process.exit()
 } else if (argv.version || argv.v) {
-  console.log('tav ' + require(__dirname + '/package.json').version)
+  console.log('tav ' + require('./package.json').version)
   process.exit()
 }
 

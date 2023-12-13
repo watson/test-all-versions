@@ -13,9 +13,9 @@ helpOptions.forEach(function (option) {
     })
     processStdout(cp, function (code, lines) {
       t.strictEqual(code, 0, 'should exit with exit code 0')
-      t.strictEqual(lines.length, 8, 'should output 8 lines')
+      t.strictEqual(lines.length, 10, 'should output 10 lines')
       t.ok(lines[0].startsWith('Usage: tav'))
-      t.ok(lines[7].startsWith('  --ci'))
+      t.ok(lines[9].startsWith('  --ci'))
       t.end()
     })
   })
