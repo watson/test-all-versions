@@ -4,6 +4,7 @@ Run your test suite against all published versions of a given
 dependency.
 
 [![npm](https://img.shields.io/npm/v/test-all-versions.svg)](https://www.npmjs.com/package/test-all-versions)
+[![codecov](https://codecov.io/gh/watson/test-all-versions/graph/badge.svg?token=AoH9k0Z4pb)](https://codecov.io/gh/watson/test-all-versions)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)
 
 ## Usage
