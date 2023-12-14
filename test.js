@@ -4,6 +4,8 @@ const exec = require('child_process').exec
 const semver = require('semver')
 const t = require('tap')
 
+const TAP16 = semver.satisfies(require('tap/package.json').version, '16.x')
+
 // Using a global test timeout because the "yaml" test needs extra time to run.
 // For some reason setting `{ timeout: ... }` directly on the test doesn't have any effect
 t.setTimeout(5 * 60 * 1000)
@@ -64,7 +66,8 @@ t.test('yaml', function (t) {
 
   processStdout(cp, function (code, lines) {
     t.equal(code, 0)
-    t.matchOnlyStrict(lines, [
+    // TODO: Remove tap16 check when Node.js 14 support is dropped
+    t[TAP16 ? 'strictSame' : 'matchOnlyStrict'](lines, [
       'expire-array@1.1.0: base64-emoji@2.0.0',
       'expire-array@1.0.0: base64-emoji@2.0.0',
       'expire-array@1.1.0: base64-emoji@1.0.0',
