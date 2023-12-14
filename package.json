@@ -30,7 +30,7 @@
   "scripts": {
     "lint": "standard",
     "pretest": "npm prune",
-    "test": "npm run lint && tap --coverage-report=lcovonly --allow-incomplete-coverage test.js"
+    "test": "npm run lint && node test.js"
   },
   "repository": {
     "type": "git",
@@ -53,7 +53,7 @@
   },
   "homepage": "https://github.com/watson/test-all-versions#readme",
   "engines": {
-    "node": ">=8"
+    "node": ">=14"
   },
   "coordinates": [
     56.0400132,
