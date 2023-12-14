@@ -27,16 +27,16 @@ jobs:
         cache: 'npm'
         cache-dependency-path: 'package.json'
     - run: npm install
-    - name: Code linting
+    - name: Lint code
       run: npm run lint
     - name: Downgrade tap to v16
       # Tap 18 doesn't support Node.js 14, so downgrade the previous major
       if: matrix.node-version == '14.x'
       run: npm install tap@16
-    - name: Tests
+    - name: Run tests
       if: matrix.node-version != '20.x'
       run: node test.js
-    - name: Tests (+ generate code coverage report)
+    - name: Run tests (+ generate code coverage report)
       if: matrix.node-version == '20.x'
       run: npm run ci:coverage
     - name: Upload coverage to Codecov
