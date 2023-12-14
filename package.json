@@ -28,6 +28,7 @@
     "tap": "^18.6.1"
   },
   "scripts": {
+    "ci:coverage": "tap --coverage-report=lcovonly --allow-incomplete-coverage test.js",
     "coverage": "npm prune && tap --coverage-report=html test.js",
     "lint": "standard",
     "test": "npm run lint && npm prune && node test.js"
