@@ -6,6 +6,7 @@ const execSync = require('child_process').execSync
 const fs = require('fs')
 const os = require('os')
 const util = require('util')
+const https = require('https')
 const isCI = require('is-ci')
 const yaml = require('js-yaml')
 const once = require('once')
@@ -144,33 +145,34 @@ function test (opts, cb) {
     if (err) return cb(err)
 
     verbose('-- %d available package versions:', versions.length, versions.join(', '))
+    verbose('-- applying version filter to available packages:', opts.versions)
 
-    versions = versions.filter(function (version) {
-      return semver.satisfies(version, opts.versions)
+    filterVersions(opts, versions, (err, versions) => {
+      if (err) return cb(err)
+
+      verbose('-- %d package versions matching filter:', versions.length, versions.join(', '))
+
+      if (versions.length === 0) {
+        cb(new Error(`No versions of ${opts.name} matching filter: ${opts.versions}`))
+        return
+      }
+
+      run()
+
+      function run (err) {
+        if (err || versions.length === 0) return cb(err)
+        const version = versions.pop()
+        if (argv.compat) spinner = getSpinner(version)()
+        testVersion(opts, version, function (err) {
+          if (argv.compat) {
+            spinner.done(!err)
+            run()
+          } else {
+            run(err)
+          }
+        })
+      }
     })
-
-    verbose('-- %d package versions matching "%s":', versions.length, opts.versions, versions.join(', '))
-
-    if (versions.length === 0) {
-      cb(new Error(`No versions of ${opts.name} matching ${opts.versions}`))
-      return
-    }
-
-    run()
-
-    function run (err) {
-      if (err || versions.length === 0) return cb(err)
-      const version = versions.pop()
-      if (argv.compat) spinner = getSpinner(version)()
-      testVersion(opts, version, function (err) {
-        if (argv.compat) {
-          spinner.done(!err)
-          run()
-        } else {
-          run(err)
-        }
-      })
-    }
   })
 }
 
@@ -378,4 +380,145 @@ function toArray (obj) {
 
 function flatten (arr) {
   return Array.prototype.concat.apply([], arr)
+}
+
+function filterVersions (opts, versions, cb) {
+  const includeVersions = opts.versions.include ?? opts.versions
+  const excludeVersions = opts.versions.exclude
+  const mode = opts.versions.mode
+
+  versions = versions.filter(function (version) {
+    return semver.satisfies(version, includeVersions) && !semver.satisfies(version, excludeVersions)
+  })
+
+  switch (mode) {
+    case undefined:
+      return cb(null, versions)
+    case 'latest-majors':
+      return cb(null, getLatestMajors(versions))
+    case 'latest-minors':
+      return cb(null, getLatestMinors(versions))
+    default: {
+      const result = mode.match(/^max-(?<max>\d+)(-(?<algo>evenly|random|latest|popular))?$/)
+      if (!result) return cb(new Error(`Unknown mode: ${mode}`))
+      const max = parseInt(result.groups.max, 10)
+      if (max < 2) return cb(new Error('max-{N}: N has to be larger than 2'))
+      if (max >= versions.length - 2) return cb(null, versions)
+      switch (result.groups.algo ?? 'evenly') {
+        case 'evenly':
+          return cb(null, getMaxEvenly(versions, max))
+        case 'random':
+          return cb(null, getMaxRandom(versions, max))
+        case 'latest':
+          return cb(null, versions.slice(max * -1))
+        case 'popular':
+          return getMaxPopular(opts.name, versions, max, cb)
+      }
+    }
+  }
+}
+
+/**
+ * From a given ordered list of versions returns the first, num in between and last. Example
+ * - input: ['5.0.0', '5.0.1', '5.1.0', '5.2.0', '5.3.0', '5.4.0', '5.5.0', '5.6.0', '5.7.0', '5.8.0', '5.8.1', '5.9.0']
+ * - input: num = 5
+ * - output: ['5.0.0', '5.1.0', '5.3.0', '5.5.0', '5.7.0', '5.8.1', '5.9.0']
+ *             first   ^^^^^^^^^ 3 version in between ^^^^^^^^^^^^    last
+ *
+ * @param {SemVer[]} versions the version list where to extract
+ * @param {Number} max the total number of versions that should be returned
+ * @returns {SemVer[]}
+ */
+function getMaxEvenly (versions, max) {
+  const spacing = (versions.length - 2) / (max - 2)
+  const indicies = new Set([0, versions.length - 1])
+  for (let n = 1; n <= (max - 2); n++) {
+    indicies.add(Math.floor(spacing * n) - 1)
+  }
+  return versions.filter((_, index) => indicies.has(index))
+}
+
+function getMaxRandom (versions, max) {
+  const indicies = new Set()
+  while (indicies.size < max) {
+    indicies.add(Math.floor(Math.random() * versions.length))
+  }
+  return versions.filter((_, index) => indicies.has(index))
+}
+
+function getMaxPopular (name, versions, max, cb) {
+  https.get(`https://api.npmjs.org/versions/${name}/last-week`, (res) => {
+    const buffers = []
+    res.on('data', (chunk) => buffers.push(chunk))
+    res.on('end', () => {
+      const downloads = Object.entries(JSON.parse(Buffer.concat(buffers)).downloads)
+      cb(
+        null,
+        downloads
+          .filter((a) => versions.includes(a[0]))
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, max)
+          .map((a) => a[0])
+      )
+    })
+  })
+}
+
+/**
+ * From a given ordered list of versions returns the latest minors. Example
+ * - input: ['5.0.0', '5.0.1', '5.1.0', '5.2.0', '5.3.0', '5.4.0', '5.5.0', '5.6.0', '5.7.0', '5.8.0', '5.8.1', '5.9.0']
+ * - output: ['5.0.1', '5.1.0', '5.2.0', '5.3.0', '5.4.0', '5.5.0', '5.6.0', '5.7.0', '5.8.1', '5.9.0']
+ *
+ * @param {SemVer[]} versions the version list where to extract latest minoes
+ * @returns {SemVer[]}
+ */
+function getLatestMajors (versions) {
+  // assuming sorted array
+  const result = []
+
+  for (const ver of versions) {
+    const lastVer = result[result.length - 1]
+
+    if (!lastVer) {
+      result.push(ver)
+      continue
+    }
+
+    if (lastVer.major === ver.major) {
+      result.pop()
+    }
+    result.push(ver)
+  }
+
+  return result
+}
+
+/**
+ * From a given ordered list of versions returns the latest minors. Example
+ * - input: ['5.0.0', '5.0.1', '5.1.0', '5.2.0', '5.3.0', '5.4.0', '5.5.0', '5.6.0', '5.7.0', '5.8.0', '5.8.1', '5.9.0']
+ * - output: ['5.0.1', '5.1.0', '5.2.0', '5.3.0', '5.4.0', '5.5.0', '5.6.0', '5.7.0', '5.8.1', '5.9.0']
+ *
+ * @param {SemVer[]} versions the version list where to extract latest minoes
+ * @returns {SemVer[]}
+ */
+function getLatestMinors (versions) {
+  // assuming sorted array
+  const result = []
+
+  for (const ver of versions) {
+    const lastVer = result[result.length - 1]
+
+    if (!lastVer) {
+      result.push(ver)
+      continue
+    }
+
+    if (lastVer.major !== ver.major || lastVer.minor !== ver.minor) {
+      result.push(ver)
+    } else if (lastVer.compare(ver) < 0) {
+      result[result.length - 1] = ver
+    }
+  }
+
+  return result
 }
