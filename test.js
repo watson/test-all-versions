@@ -179,12 +179,15 @@ t.test('versions object', function (t) {
   processStdout(cp, function (code, lines) {
     t.equal(code, 0)
     expected.forEach(function (expect, index) {
-      if (typeof expect === 'string') {
-        t.equal(lines[index], expect)
-      } else if (typeof expect === 'function') {
-        expect(t, lines[index])
-      } else {
-        t.fail(`Unknown type: ${typeof expect}`)
+      switch (typeof expect) {
+        case 'string':
+          t.equal(lines[index], expect)
+          break
+        case 'function':
+          expect(t, lines[index])
+          break
+        default:
+          t.fail(`Unknown type: ${typeof expect}`)
       }
     })
     t.end()
