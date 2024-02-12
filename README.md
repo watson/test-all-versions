@@ -163,7 +163,7 @@ The `versions` field takes two types of arguments:
       - `latest`: Pick the latest `N` versions within the desired range.
       - `popular`: Pick the `N` most popular versions based on last weeks download count from npm.
 
-##### Examples
+##### Exampels
 
 Test all versions within `^1.0.0`, except `1.2.3`:
 
