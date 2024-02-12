@@ -145,6 +145,56 @@ mysql:
       commands: node test/mysql-2x.js
 ```
 
+#### Advanced `versions` usage
+
+The `versions` field takes two types of arguments:
+
+- A string representing a semver-range (e.g. `^2.0.0`)
+- An object with the following properties:
+  - `include` (required): The semver-range to include in testing. Same effect that the `versions` string.
+  - `exclude` (optional): The semver-range of versions to exclude. Versions matching this range would be removed from the include list if present.
+  - `mode` (optional): The way you want to pick versions from the ones resolved based on include/exclude. Possible values would be:
+    - `all` (default): All versions matching the desired range.
+    - `latest-majors`: Only pick the latest version of each major matching the desired range.
+    - `latest-minors`: Only pick the latest version of each minor matching the desired range.
+    - `max-{N}(-<algo>)`: Only pick `N` number of versions within the desired range, where `{N}` is a number larger than `2`. The optional `-<algo>` postfix can be used to specify the algorithm used for picking the versions inbetween. Possible algorithmes are:
+      - `evenly` (default): Evenly space out which versions to pick, always including the first and last version in the desired range.
+      - `random`: Pick `N` versions at random within the desired range.
+      - `latest`: Pick the latest `N` versions within the desired range.
+      - `popular`: Pick the `N` most popular versions based on last weeks download count from npm.
+
+##### Examples
+
+Test all versions within `^1.0.0`, except `1.2.3`:
+
+```yaml
+mysql:
+  versions:
+    include: ^1.0.0
+    exclude: 1.2.3
+  commands: node test/mysql.js
+```
+
+Test 5 versions in the `^1.0.0` range (evenly spaced within the range):
+
+```yaml
+mysql:
+  versions:
+    include: ^1.0.0
+    mode: max-5
+  commands: node test/mysql.js
+```
+
+Test the 5 most popular versions in the `^1.0.0` range (based on download count within the last week):
+
+```yaml
+mysql:
+  versions:
+    include: ^1.0.0
+    mode: max-5-popular
+  commands: node test/mysql.js
+```
+
 #### Whitelist tests with environment variables
 
 You can use the enironment variable `TAV` to limit which module from the
