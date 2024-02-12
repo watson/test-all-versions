@@ -187,7 +187,7 @@ t.test('versions object', function (t) {
           expect(t, lines[index])
           break
         default:
-          t.fail(`Unknown type: ${typeof expect}`)
+          throw new Error(`Unknown type: ${typeof expect}`)
       }
     })
     t.end()
