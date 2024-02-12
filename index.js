@@ -449,10 +449,13 @@ function getMaxRandom (versions, max) {
 function getMaxPopular (name, versions, max, cb) {
   https.get(`https://api.npmjs.org/versions/${name}/last-week`, (res) => {
     const buffers = []
+    const done = once(cb)
+
+    res.on('error', done)
     res.on('data', (chunk) => buffers.push(chunk))
     res.on('end', () => {
       const downloads = Object.entries(JSON.parse(Buffer.concat(buffers)).downloads)
-      cb(
+      done(
         null,
         downloads
           .filter((a) => versions.includes(a[0]))
