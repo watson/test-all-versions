@@ -182,8 +182,6 @@ t.test('versions object', function (t) {
       const line = lines.shift()
       if (typeof expect === 'string') {
         t.equal(line, expect)
-      } else if (expect instanceof RegExp) {
-        t.ok(expect.test(line))
       } else if (typeof expect === 'function') {
         expect(t, line)
       } else {
