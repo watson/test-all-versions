@@ -147,7 +147,7 @@ t.test('no matching versions', function (t) {
   const cp = start('../../index.js', true)
 
   cp.stderr.on('data', function (chunk) {
-    t.equal(chunk, '-- fatal: No versions of strip-lines matching 123.123.123\n')
+    t.equal(chunk, '-- fatal: No versions of strip-lines matching filter: 123.123.123\n')
     stderr = true
   })
   processStdout(cp, function (code, lines) {
