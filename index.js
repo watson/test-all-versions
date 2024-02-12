@@ -393,6 +393,7 @@ function filterVersions (opts, versions, cb) {
 
   switch (mode) {
     case undefined:
+    case 'all':
       return cb(null, versions)
     case 'latest-majors':
       return cb(null, getLatestMajors(versions))
