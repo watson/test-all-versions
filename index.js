@@ -425,10 +425,6 @@ function filterVersions (opts, versions, cb) {
  * - input: num = 5
  * - output: ['5.0.0', '5.1.0', '5.3.0', '5.5.0', '5.7.0', '5.8.1', '5.9.0']
  *             first   ^^^^^^^^^ 3 version in between ^^^^^^^^^^^^    last
- *
- * @param {SemVer[]} versions the version list where to extract
- * @param {Number} max the total number of versions that should be returned
- * @returns {SemVer[]}
  */
 function getMaxEvenly (versions, max) {
   const spacing = (versions.length - 2) / (max - 2)
@@ -468,61 +464,27 @@ function getMaxPopular (name, versions, max, cb) {
   })
 }
 
-/**
- * From a given ordered list of versions returns the latest minors. Example
- * - input: ['5.0.0', '5.0.1', '5.1.0', '5.2.0', '5.3.0', '5.4.0', '5.5.0', '5.6.0', '5.7.0', '5.8.0', '5.8.1', '5.9.0']
- * - output: ['5.0.1', '5.1.0', '5.2.0', '5.3.0', '5.4.0', '5.5.0', '5.6.0', '5.7.0', '5.8.1', '5.9.0']
- *
- * @param {SemVer[]} versions the version list where to extract latest minoes
- * @returns {SemVer[]}
- */
 function getLatestMajors (versions) {
-  // assuming sorted array
-  const result = []
-
-  for (const ver of versions) {
-    const lastVer = result[result.length - 1]
-
-    if (!lastVer) {
-      result.push(ver)
-      continue
-    }
-
-    if (lastVer.major === ver.major) {
-      result.pop()
-    }
-    result.push(ver)
-  }
-
-  return result
+  return versions
+    .map(semver.parse)
+    .sort(semver.rcompare)
+    .reduce((result, version) => {
+      const smallestSeenMajor = result[0]?.major ?? Number.MAX_SAFE_INTEGER
+      if (version.major < smallestSeenMajor) result.unshift(version)
+      return result
+    }, [])
+    .map((v) => v.raw)
 }
 
-/**
- * From a given ordered list of versions returns the latest minors. Example
- * - input: ['5.0.0', '5.0.1', '5.1.0', '5.2.0', '5.3.0', '5.4.0', '5.5.0', '5.6.0', '5.7.0', '5.8.0', '5.8.1', '5.9.0']
- * - output: ['5.0.1', '5.1.0', '5.2.0', '5.3.0', '5.4.0', '5.5.0', '5.6.0', '5.7.0', '5.8.1', '5.9.0']
- *
- * @param {SemVer[]} versions the version list where to extract latest minoes
- * @returns {SemVer[]}
- */
 function getLatestMinors (versions) {
-  // assuming sorted array
-  const result = []
-
-  for (const ver of versions) {
-    const lastVer = result[result.length - 1]
-
-    if (!lastVer) {
-      result.push(ver)
-      continue
-    }
-
-    if (lastVer.major !== ver.major || lastVer.minor !== ver.minor) {
-      result.push(ver)
-    } else if (lastVer.compare(ver) < 0) {
-      result[result.length - 1] = ver
-    }
-  }
-
-  return result
+  return versions
+    .map(semver.parse)
+    .sort(semver.rcompare)
+    .reduce((result, version) => {
+      const smallestSeenMajor = result[0]?.major ?? Number.MAX_SAFE_INTEGER
+      const smallestSeenMinor = result[0]?.minor ?? Number.MAX_SAFE_INTEGER
+      if (version.major < smallestSeenMajor || version.minor < smallestSeenMinor) result.unshift(version)
+      return result
+    }, [])
+    .map((v) => v.raw)
 }

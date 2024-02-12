@@ -74,38 +74,3 @@ expire-array:
           require('./node_modules/base64-emoji/package.json').version
         )
       \""
-
-# Versions object
-# gunzip-maybe:
-#   jobs:
-#     - versions:
-#         include: "~1.2.0"
-#       commands: "node -e \"console.log('include: ~1.2.0, gunzip-maybe@%s', require('./node_modules/gunzip-maybe/package.json').version)\""
-#     - versions:
-#         include: "~1.0.0"
-#         exclude: "1.0.1 || 1.0.2"
-#       commands: "node -e \"console.log('include: ~1.0.0, exclude: 1.0.1 || 1.0.2, gunzip-maybe@%s', require('./node_modules/gunzip-maybe/package.json').version)\""
-#     - versions:
-#         include: "<=1.4.2"
-#         mode: max-2
-#       commands: "node -e \"console.log('include: <=1.4.2, mode: max-2, gunzip-maybe@%s', require('./node_modules/gunzip-maybe/package.json').version)\""
-#     - versions:
-#         include: "<=1.4.2"
-#         mode: max-2-evenly
-#       commands: "node -e \"console.log('include: <=1.4.2, mode: max-2-evenly, gunzip-maybe@%s', require('./node_modules/gunzip-maybe/package.json').version)\""
-#     - versions:
-#         include: "<=1.4.2"
-#         mode: max-5-evenly
-#       commands: "node -e \"console.log('include: <=1.4.2, mode: max-5-evenly, gunzip-maybe@%s', require('./node_modules/gunzip-maybe/package.json').version)\""
-#     - versions:
-#         include: "<=1.4.2"
-#         mode: max-2-random
-#       commands: "node -e \"console.log('include: <=1.4.2, mode: max-2-random, gunzip-maybe@%s', require('./node_modules/gunzip-maybe/package.json').version)\""
-#     - versions:
-#         include: "<=1.4.2"
-#         mode: max-2-latest
-#       commands: "node -e \"console.log('include: <=1.4.2, mode: max-2-latest, gunzip-maybe@%s', require('./node_modules/gunzip-maybe/package.json').version)\""
-#     - versions:
-#         include: "<=1.4.2"
-#         mode: max-2-popular
-#       commands: "node -e \"console.log('include: <=1.4.2, mode: max-2-popular, gunzip-maybe@%s', require('./node_modules/gunzip-maybe/package.json').version)\""

@@ -158,6 +158,55 @@ t.test('no matching versions', function (t) {
   })
 })
 
+t.test('versions object', function (t) {
+  const expected = [
+    ...match('include: ~1.2.0', ['1.2.0', '1.2.1']),
+    ...match('include: ~1.2.0, mode: all', ['1.2.0', '1.2.1']),
+    ...match('include: ~1.0.0, exclude: 1.0.1 || 1.0.2', ['1.0.0', '1.0.3']),
+    ...match('include: <=1.4.2, mode: latest-majors', ['0.0.0', '1.4.2']),
+    ...match('include: <=1.4.2, mode: latest-minors', ['0.0.0', '1.0.3', '1.1.0', '1.2.1', '1.3.1', '1.4.2']),
+    ...match('include: <=1.4.2, mode: max-2', ['0.0.0', '1.4.2']),
+    ...match('include: <=1.4.2, mode: max-2-evenly', ['0.0.0', '1.4.2']),
+    ...match('include: <=1.4.2, mode: max-5-evenly', ['0.0.0', '1.0.1', '1.2.0', '1.4.0', '1.4.2']),
+    ...matchSemver('include: <=1.4.2, mode: max-2-random', 2, '<=1.4.2'),
+    ...match('include: <=1.4.2, mode: max-2-latest', ['1.4.1', '1.4.2']),
+    ...match('include: <=1.4.2, mode: max-2-popular', ['1.4.2', '1.4.1'])
+  ].reverse()
+
+  process.chdir('./test/versions-object')
+  const cp = start('../../index.js')
+
+  processStdout(cp, function (code, lines) {
+    t.equal(code, 0)
+    expected.forEach(function (expect) {
+      const line = lines.shift()
+      if (typeof expect === 'string') {
+        t.equal(line, expect)
+      } else if (expect instanceof RegExp) {
+        t.ok(expect.test(line))
+      } else if (typeof expect === 'function') {
+        expect(t, line)
+      } else {
+        t.fail(`Unknown type: ${typeof expect}`)
+      }
+    })
+    t.end()
+  })
+
+  function match (prefix, versions) {
+    return versions.map((v) => `${prefix}, gunzip-maybe@${v}`)
+  }
+
+  function matchSemver (prefix, total, expectedRange) {
+    const regex = new RegExp(`^${prefix}, gunzip-maybe@(.+)$`)
+    return new Array(total).fill((t, line) => {
+      const result = line.match(regex)
+      if (!result) return t.fail(`"${line}" doesn't match regex ${regex.toString()}`)
+      t.ok(semver.satisfies(result[1], expectedRange))
+    })
+  }
+})
+
 function start (path, silence) {
   const cp = exec(path || './index.js')
 
