@@ -151,9 +151,9 @@ The `versions` field takes two types of arguments:
 
 - A string representing a semver-range (e.g. `^2.0.0`)
 - An object with the following properties:
-  - `include` (required): The semver-range to include in testing. Same effect that the `versions` string.
-  - `exclude` (optional): The semver-range of versions to exclude. Versions matching this range would be removed from the include list if present.
-  - `mode` (optional): The way you want to pick versions from the ones resolved based on include/exclude. Possible values would be:
+  - `include` (required): The semver-range to include in testing. Same effect as the `versions` string.
+  - `exclude` (optional): The semver-range of versions to exclude. Versions matching this range would be removed from the `include` list if present.
+  - `mode` (optional): The way you want to pick versions from the ones resolved based on `include`/`exclude`. Possible values are:
     - `all` (default): All versions matching the desired range.
     - `latest-majors`: Only pick the latest version of each major matching the desired range.
     - `latest-minors`: Only pick the latest version of each minor matching the desired range.
