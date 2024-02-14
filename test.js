@@ -147,7 +147,7 @@ t.test('no matching versions', function (t) {
   const cp = start('../../index.js', true)
 
   cp.stderr.on('data', function (chunk) {
-    t.equal(chunk, '-- fatal: No versions of strip-lines matching 123.123.123\n')
+    t.equal(chunk, '-- fatal: No versions of strip-lines matching filter: 123.123.123\n')
     stderr = true
   })
   processStdout(cp, function (code, lines) {
@@ -156,6 +156,55 @@ t.test('no matching versions', function (t) {
     t.equal(lines.length, 0, 'should not run any commands')
     t.end()
   })
+})
+
+t.test('versions object', function (t) {
+  const expected = [
+    ...match('include: ~1.2.0', ['1.2.0', '1.2.1']),
+    ...match('include: ~1.2.0, mode: all', ['1.2.0', '1.2.1']),
+    ...match('include: ~1.0.0, exclude: 1.0.1 || 1.0.2', ['1.0.0', '1.0.3']),
+    ...match('include: <=1.4.2, mode: latest-majors', ['0.0.0', '1.4.2']),
+    ...match('include: <=1.4.2, mode: latest-minors', ['0.0.0', '1.0.3', '1.1.0', '1.2.1', '1.3.1', '1.4.2']),
+    ...match('include: <=1.4.2, mode: max-2', ['0.0.0', '1.4.2']),
+    ...match('include: <=1.4.2, mode: max-2-evenly', ['0.0.0', '1.4.2']),
+    ...match('include: <=1.4.2, mode: max-5-evenly', ['0.0.0', '1.0.1', '1.2.0', '1.4.0', '1.4.2']),
+    ...matchSemver('include: <=1.4.2, mode: max-2-random', 2, '<=1.4.2'),
+    ...match('include: <=1.4.2, mode: max-2-latest', ['1.4.1', '1.4.2']),
+    ...match('include: <=1.4.2, mode: max-2-popular', ['1.4.2', '1.4.1'])
+  ].reverse()
+
+  process.chdir('./test/versions-object')
+  const cp = start('../../index.js')
+
+  processStdout(cp, function (code, lines) {
+    t.equal(code, 0)
+    expected.forEach(function (expect, index) {
+      switch (typeof expect) {
+        case 'string':
+          t.equal(lines[index], expect)
+          break
+        case 'function':
+          expect(t, lines[index])
+          break
+        default:
+          throw new Error(`Unknown type: ${typeof expect}`)
+      }
+    })
+    t.end()
+  })
+
+  function match (prefix, versions) {
+    return versions.map((v) => `${prefix}, gunzip-maybe@${v}`)
+  }
+
+  function matchSemver (prefix, total, expectedRange) {
+    const regex = new RegExp(`^${prefix}, gunzip-maybe@(.+)$`)
+    return new Array(total).fill((t, line) => {
+      const result = line.match(regex)
+      if (!result) return t.fail(`"${line}" doesn't match regex ${regex.toString()}`)
+      t.ok(semver.satisfies(result[1], expectedRange))
+    })
+  }
 })
 
 function start (path, silence) {
