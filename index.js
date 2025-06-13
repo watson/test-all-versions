@@ -458,7 +458,7 @@ function getMaxPopular (name, versions, max, cb) {
     res.on('error', done)
     res.on('data', (chunk) => buffers.push(chunk))
     res.on('end', () => {
-      const downloads = Object.entries(JSON.parse(Buffer.concat(buffers)).downloads)
+      const downloads = Object.entries(JSON.parse(Buffer.concat(buffers).toString()).downloads)
       done(
         null,
         downloads
