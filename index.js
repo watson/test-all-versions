@@ -39,7 +39,7 @@ if (argv.help || argv.h) {
   console.log('  -v, --version  show the tav version and exit')
   console.log('  -q, --quiet    don\'t output stdout from tests unless an error occurs')
   console.log('  --verbose      output a lot of information while running')
-  console.log('  --dry-run      do a dry-run (don\'t actually execute anything)')
+  console.log('  --dry-run      do a dry-run (no tests will be executed)')
   console.log('  --compat       output just module version compatibility - no errors')
   console.log('  --ci           only run on CI servers when using .tav.yml file')
   process.exit()

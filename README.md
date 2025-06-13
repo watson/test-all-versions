@@ -24,9 +24,11 @@ tav mysql ^2.0.0 node test.js
 
 ### options
 
-- `--help` - Output usage info
-- `--quiet` - Don't output stdout from tests unless an error occors
+- `-h` / `--help` - Output usage info
+- `-v` / `--version` - Output the tav version
+- `-q` / `--quiet` - Don't output stdout from tests unless an error occors
 - `--verbose` - Output a lot of information while running
+- `--dry-run` - Run in dry-run mode (no tests will be executed)
 - `--compat` - Output just module version compatibility - no errors
 - `--ci` - When running `tav` together with a `.tav.yml` file, use this
   argument to only run the tests on a CI server. This allows you to add
