@@ -353,8 +353,8 @@ function getSpinner (str) {
     diff.write(util.format('%s %s', frames[i++ % frames.length], str))
     return spin
   }
-  spin.done = function (sucess) {
-    diff.write(util.format('%s %s', sucess ? logSymbols.success : logSymbols.error, str))
+  spin.done = function (success) {
+    diff.write(util.format('%s %s', success ? logSymbols.success : logSymbols.error, str))
     diff.reset()
     spin.isDone = true
     process.stdout.write(os.EOL)
