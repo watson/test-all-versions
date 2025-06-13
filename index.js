@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 'use strict'
 
-const exec = require('child_process').exec
-const execSync = require('child_process').execSync
+const { exec, execSync } = require('child_process')
 const fs = require('fs')
 const os = require('os')
 const util = require('util')
@@ -82,7 +81,7 @@ function loadYaml () {
 }
 
 function normalizeConf (conf) {
-  const whitelist = process.env.TAV ? process.env.TAV.split(',') : null
+  const whitelist = process.env.TAV?.split(',')
 
   return flatten(Object.keys(conf)
     .filter(function (name) {
@@ -181,7 +180,7 @@ function testVersion (test, version, cb) {
 
   preinstall(function (err) {
     if (err) return cb(err)
-    const packages = [].concat(test.peerDependencies, test.name + '@' + version)
+    const packages = [...test.peerDependencies, `${test.name}@${version}`]
     ensurePackages(packages, runNextCmd)
   })
 
@@ -193,7 +192,7 @@ function testVersion (test, version, cb) {
 
       testCmd(test.name, version, test.commands[cmdIndex++], test.env, function (code) {
         if (code !== 0) {
-          const err = new Error('Test exited with code ' + code)
+          const err = new Error(`Test exited with code ${code}`)
           err.exitCode = code
           return cb(err)
         }
