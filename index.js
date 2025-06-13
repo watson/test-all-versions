@@ -307,9 +307,7 @@ function ensurePackages (packages, cb) {
   })
 }
 
-function attemptInstall (packages, attempts, cb) {
-  if (typeof attempts === 'function') return attemptInstall(packages, 1, attempts)
-
+function attemptInstall (packages, cb, attempts = 1) {
   log('-- installing %j', packages)
   if (argv['dry-run']) {
     // Dry-run.
@@ -324,7 +322,7 @@ function attemptInstall (packages, attempts, cb) {
 
     if (++attempts <= 10) {
       console.warn('-- error installing %j (%s) - retrying (%d/10)...', packages, err.message, attempts)
-      attemptInstall(packages, attempts, cb)
+      attemptInstall(packages, cb, attempts)
     } else {
       console.error('-- error installing %j - aborting!', packages)
       console.error(err.stack)
