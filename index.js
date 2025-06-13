@@ -34,13 +34,14 @@ if (argv.help || argv.h) {
   console.log('Usage: tav [options] [<module> <semver> <command> [args...]]')
   console.log()
   console.log('Options:')
-  console.log('  -h, --help     show this help')
-  console.log('  -v, --version  show the tav version and exit')
-  console.log('  -q, --quiet    don\'t output stdout from tests unless an error occurs')
-  console.log('  --verbose      output a lot of information while running')
-  console.log('  --dry-run      do a dry-run (no tests will be executed)')
-  console.log('  --compat       output just module version compatibility - no errors')
-  console.log('  --ci           only run on CI servers when using .tav.yml file')
+  console.log('  -h, --help        show this help')
+  console.log('  -v, --version     show the tav version and exit')
+  console.log('  -q, --quiet       don\'t output stdout from tests unless an error occurs')
+  console.log('  --registry=<url>  use a custom registry (e.g. --registry=https://registry.example.com)')
+  console.log('  --verbose         output a lot of information while running')
+  console.log('  --dry-run         do a dry-run (no tests will be executed)')
+  console.log('  --compat          output just module version compatibility - no errors')
+  console.log('  --ci              only run on CI servers when using .tav.yml file')
   process.exit()
 } else if (argv.version || argv.v) {
   console.log('tav ' + require('./package.json').version)
@@ -140,7 +141,7 @@ function test (opts, cb) {
 
   if (argv.compat) console.log('Testing compatibility with %s:', opts.name)
 
-  pkgVersions(opts.name, function (err, versions) {
+  pkgVersions(opts.name, argv.registry || opts.registry, function (err, versions) {
     if (err) return cb(err)
 
     verbose('-- %d available package versions:', versions.length, versions.join(', '))
@@ -181,7 +182,7 @@ function testVersion (test, version, cb) {
   preinstall(function (err) {
     if (err) return cb(err)
     const packages = [...test.peerDependencies, `${test.name}@${version}`]
-    ensurePackages(packages, runNextCmd)
+    ensurePackages(packages, test.registry, runNextCmd)
   })
 
   function runNextCmd (err) {
@@ -266,20 +267,20 @@ function execute (cmd, name, opts, cb) {
   }
 }
 
-function ensurePackages (packages, cb) {
+function ensurePackages (packages, registry, cb) {
   log('-- required packages %j', packages)
 
   if (npm5plus) {
     // npm5 will uninstall everything that's not in the local package.json and
     // not in the install string. This might make tests fail. So if we detect
     // npm5, we just force install everything all the time.
-    attemptInstall(packages, cb)
+    attemptInstall(packages, registry, cb)
     return
   }
 
   const next = afterAll(function (_, packages) {
     packages = packages.filter(function (pkg) { return !!pkg })
-    if (packages.length > 0) attemptInstall(packages, cb)
+    if (packages.length > 0) attemptInstall(packages, registry, cb)
     else cb()
   })
 
@@ -307,7 +308,7 @@ function ensurePackages (packages, cb) {
   })
 }
 
-function attemptInstall (packages, cb, attempts = 1) {
+function attemptInstall (packages, registry, cb, attempts = 1) {
   log('-- installing %j', packages)
   if (argv['dry-run']) {
     // Dry-run.
@@ -323,7 +324,7 @@ function attemptInstall (packages, cb, attempts = 1) {
 
     if (++attempts <= 10) {
       console.warn('-- error installing %j (%s) - retrying (%d/10)...', packages, err.message, attempts)
-      attemptInstall(packages, cb, attempts)
+      attemptInstall(packages, registry, cb, attempts)
     } else {
       console.error('-- error installing %j - aborting!', packages)
       console.error(err.stack)
@@ -333,6 +334,7 @@ function attemptInstall (packages, cb, attempts = 1) {
 
   const opts = { noSave: true, command: npmCmd }
   if (argv.verbose) opts.stdio = 'inherit'
+  if (argv.registry || registry) opts.registry = argv.registry || registry
 
   // npm on Travis have a tendency to hang every once in a while
   // (https://twitter.com/wa7son/status/1006859826549477378). We'll use a

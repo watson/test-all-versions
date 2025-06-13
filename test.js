@@ -1,6 +1,7 @@
 'use strict'
 
-const exec = require('child_process').exec
+const { exec } = require('child_process')
+const http = require('http')
 const semver = require('semver')
 const t = require('tap')
 
@@ -23,9 +24,9 @@ helpOptions.forEach(function (option) {
     })
     processStdout(cp, function (code, lines) {
       t.equal(code, 0, 'should exit with exit code 0')
-      t.equal(lines.length, 10, 'should output 10 lines')
+      t.equal(lines.length, 11, 'should output 11 lines')
       t.ok(lines[0].startsWith('Usage: tav'))
-      t.ok(lines[9].startsWith('  --ci'))
+      t.ok(lines[10].startsWith('  --ci')) // TODO: Use .at(-1) once Node.js 14 support is dropped
       t.end()
     })
   })
@@ -158,6 +159,23 @@ t.test('no matching versions', function (t) {
   })
 })
 
+t.test('custom registry using yaml registry property', function (t) {
+  withMockRegistry({ cwd: './test/registry' }, function (path) {
+    t.equal(path, '/is-it-weekend')
+    t.end()
+  })
+})
+
+t.test('custom registry using command line argument', function (t) {
+  withMockRegistry({
+    cwd: './test/registry',
+    args: '--registry=http://localhost:3001/foo/'
+  }, function (path) {
+    t.equal(path, '/foo/is-it-weekend')
+    t.end()
+  })
+})
+
 t.test('versions object', function (t) {
   const expected = [
     ...match('include: ~1.2.0', ['1.2.0', '1.2.1']),
@@ -235,5 +253,21 @@ function processChunk (chunk) {
 
   return trimmed.split('\n').filter(function (line) {
     return line.indexOf('-- ') !== 0 // ignore output from tav it self
+  })
+}
+
+function withMockRegistry ({ cwd, args }, cb) {
+  const server = http.createServer(function (req, res) {
+    res.writeHead(404)
+    res.end()
+    server.on('close', () => {
+      cb(req.url)
+    })
+    server.close()
+  })
+
+  server.listen(3001, () => {
+    process.chdir(cwd)
+    start(['../../index.js', args].filter(Boolean).join(' '))
   })
 }
