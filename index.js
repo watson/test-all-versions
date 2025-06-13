@@ -315,6 +315,7 @@ function attemptInstall (packages, cb, attempts = 1) {
     return
   }
 
+  /** @type {(err?: Error) => void} */
   const done = once(function (err) {
     clearTimeout(timeout)
 
@@ -440,6 +441,15 @@ function getMaxRandom (versions, max) {
   return versions.filter((_, index) => indicies.has(index))
 }
 
+/**
+ * Get the most popular versions of a package from the npm registry. Popularity is
+ * based on the number of downloads in the last week.
+ *
+ * @param {string} name - The name of the package to get the popular versions for
+ * @param {string[]} versions - The versions to filter
+ * @param {number} max - The maximum number of versions to return
+ * @param {function(Error?, string[]): void} cb - The callback to call with the result
+ */
 function getMaxPopular (name, versions, max, cb) {
   https.get(`https://api.npmjs.org/versions/${name}/last-week`, (res) => {
     const buffers = []
