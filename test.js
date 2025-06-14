@@ -1,5 +1,6 @@
 'use strict'
 
+const { resolve, relative } = require('path')
 const { exec } = require('child_process')
 const http = require('http')
 const semver = require('semver')
@@ -99,7 +100,7 @@ t.test('node version', function (t) {
   t.plan(active ? 2 : 1)
 
   process.chdir('./test/node-version')
-  const cp = start('../../index.js')
+  const cp = start()
 
   processStdout(cp, function (code, lines) {
     t.equal(code, 0)
@@ -113,7 +114,7 @@ t.test('node version', function (t) {
 t.test('missing "versions" property', function (t) {
   process.chdir('./test/missing-versions')
   let found = false
-  const cp = start('../../index.js', true)
+  const cp = start({ quiet: true })
   cp.stderr.on('data', function (chunk) {
     if (!found && /Error: Missing "versions" property for 27mhz/.test(chunk)) {
       found = true
@@ -131,7 +132,7 @@ t.test('array of test cases', function (t) {
   t.plan(3)
 
   process.chdir('./test/array')
-  const cp = start('../../index.js')
+  const cp = start()
 
   processStdout(cp, function (code, lines) {
     t.equal(code, 0)
@@ -145,7 +146,7 @@ t.test('no matching versions', function (t) {
   let stderr = false
 
   process.chdir('./test/no-matching-versions')
-  const cp = start('../../index.js', true)
+  const cp = start({ quiet: true })
 
   cp.stderr.on('data', function (chunk) {
     t.equal(chunk, '-- fatal: No versions of strip-lines matching filter: 123.123.123\n')
@@ -192,7 +193,7 @@ t.test('versions object', function (t) {
   ].reverse()
 
   process.chdir('./test/versions-object')
-  const cp = start('../../index.js')
+  const cp = start()
 
   processStdout(cp, function (code, lines) {
     t.equal(code, 0)
@@ -225,10 +226,14 @@ t.test('versions object', function (t) {
   }
 })
 
-function start (path, silence) {
-  const cp = exec(path || './index.js')
+function start ({ args = '', quiet = false } = {}) {
+  const cp = exec(
+    [resolve(relative(process.cwd(), __dirname), 'index.js'), args]
+      .filter(Boolean)
+      .join(' ')
+  )
 
-  if (!silence) {
+  if (!quiet) {
     cp.stdout.pipe(process.stdout)
     cp.stderr.pipe(process.stderr)
   }
@@ -268,6 +273,6 @@ function withMockRegistry ({ cwd, args }, cb) {
 
   server.listen(3001, () => {
     process.chdir(cwd)
-    start(['../../index.js', args].filter(Boolean).join(' '))
+    start({ args })
   })
 }
