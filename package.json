@@ -1,6 +1,6 @@
 {
   "name": "test-all-versions",
-  "version": "6.1.0",
+  "version": "6.2.0",
   "description": "Run your test suite against all published versions of a dependency",
   "bin": {
     "tav": "index.js"
