@@ -50,3 +50,8 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: ./.tap/report
+    - uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        path: /home/runner/.npm/_logs/*.log
+        retention-days: 1
