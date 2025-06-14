@@ -1,0 +1,4 @@
+is-it-weekend:
+  registry: http://localhost:3001/
+  versions: '1.0.0'
+  commands: echo hello

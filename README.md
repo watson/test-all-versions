@@ -27,6 +27,7 @@ tav mysql ^2.0.0 node test.js
 - `-h` / `--help` - Output usage info
 - `-v` / `--version` - Output the tav version
 - `-q` / `--quiet` - Don't output stdout from tests unless an error occors
+- `--registry=<url>` - Use a custom registry (e.g. `--registry=https://registry.example.com`)
 - `--verbose` - Output a lot of information while running
 - `--dry-run` - Run in dry-run mode (no tests will be executed)
 - `--compat` - Output just module version compatibility - no errors
@@ -196,6 +197,19 @@ mysql:
     mode: max-5-popular
   commands: node test/mysql.js
 ```
+
+#### External registries
+
+Install a module from a custom registry (the default is the npm public registry):
+
+```yaml
+my-custom-module:
+  registry: https://registry.example.com/
+  versions: ^2.0.0
+  commands: node test.js
+```
+
+A registry provided using the command line argument `--registry` takes precedence.
 
 #### Whitelist tests with environment variables
 
