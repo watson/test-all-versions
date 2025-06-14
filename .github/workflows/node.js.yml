@@ -11,13 +11,15 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         node-version: [14.x, 16.x, 18.x, 20.x, 21.x, 22.x, 23.x, 24.x]
-
+        include:
+          - node-version: 14.x
+            tap16: true
+          - node-version: 24.x
+            run-coverage: true
     steps:
     - uses: actions/checkout@v4
     - name: Use Node.js ${{ matrix.node-version }}
@@ -26,21 +28,22 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
         cache-dependency-path: 'package.json'
-    - run: npm install
+    - name: Install dependencies
+      run: npm install
     - name: Lint code
       run: npm run lint
     - name: Downgrade tap to v16
-      # Tap 18 doesn't support Node.js 14, so downgrade the previous major
-      if: matrix.node-version == '14.x'
+      # Tap 19 doesn't support Node.js 14, downgrade the version that does
+      if: matrix.tap16 == true
       run: npm install tap@16
     - name: Run tests
-      if: matrix.node-version != '24.x'
+      if: matrix.run-coverage != true
       run: node test.js
-    - name: Run tests (+ generate code coverage report)
-      if: matrix.node-version == '24.x'
+    - name: Run tests with coverage
+      if: matrix.run-coverage == true
       run: npm run ci:coverage
     - name: Upload coverage to Codecov
-      if: matrix.node-version == '24.x'
+      if: matrix.run-coverage == true
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
