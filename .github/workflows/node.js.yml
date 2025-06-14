@@ -39,11 +39,14 @@ jobs:
       if: matrix.tap16 == true
       run: npm install tap@16
     - name: Run tests
-      if: matrix.run-coverage != true
-      run: node test.js
+      if: matrix.run-coverage != true && matrix.tap16 != true
+      run: npm run test:ci
+    - name: Run tests with tap 16
+      if: matrix.run-coverage != true && matrix.tap16 == true
+      run: npm run test:ci:tap16
     - name: Run tests with coverage
       if: matrix.run-coverage == true
-      run: npm run ci:coverage
+      run: npm run coverage:ci
     - name: Upload coverage to Codecov
       if: matrix.run-coverage == true
       uses: codecov/codecov-action@v5

@@ -28,10 +28,12 @@
     "tap": "^19.2.5"
   },
   "scripts": {
-    "ci:coverage": "tap --coverage-report=lcovonly --allow-incomplete-coverage test.js",
     "coverage": "npm prune && tap --coverage-report=html test.js",
+    "coverage:ci": "tap --coverage-report=lcovonly --allow-incomplete-coverage test.js",
     "lint": "standard",
-    "test": "npm run lint && npm prune && node test.js"
+    "test": "npm run lint && npm prune && tap test.js",
+    "test:ci": "tap --only --disable-coverage test.js",
+    "test:ci:tap16": "tap --no-check-coverage test.js"
   },
   "repository": {
     "type": "git",
