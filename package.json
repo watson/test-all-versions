@@ -32,7 +32,7 @@
     "coverage:ci": "tap --coverage-report=lcovonly --allow-incomplete-coverage test.js",
     "lint": "standard",
     "test": "npm run lint && npm prune && tap test.js",
-    "test:ci": "tap --only --disable-coverage test.js",
+    "test:ci": "tap --disable-coverage test.js",
     "test:ci:tap16": "node test.js"
   },
   "repository": {
